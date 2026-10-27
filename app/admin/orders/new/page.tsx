@@ -9,16 +9,15 @@ import { Avatar, Badge, Button, Card, cx, ErrorBanner } from "@/components/ui/pr
 import { listOrders, listTechnicians } from "@/lib/data";
 import { apiPost } from "@/lib/api";
 import { useLoad } from "@/lib/use-load";
-import { isToday, money } from "@/lib/format";
+import { isToday, isoToMyLocalInput, money, myLocalInputToIso } from "@/lib/format";
 import { isValidMyPhone } from "@/lib/phone";
 import { newJobMessage } from "@/lib/whatsapp";
 import { branchOptions, serviceOptions } from "@/lib/order-types";
 
+/** Three hours from now, on the hour, in Malaysia time. */
 function defaultSlot() {
-  const date = new Date(Date.now() + 3 * 3600000);
-  date.setMinutes(0, 0, 0);
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 16);
+  const hour = Math.ceil((Date.now() + 3 * 3600000) / 3600000) * 3600000;
+  return isoToMyLocalInput(new Date(hour));
 }
 
 export default function NewOrderPage() {
@@ -85,7 +84,7 @@ function NewOrderForm() {
       const result = await apiPost<{ orderNo: string }>("/api/orders", {
         ...form,
         quotedPrice: price,
-        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null
+        scheduledAt: myLocalInputToIso(form.scheduledAt)
       });
       router.push("/admin/orders/" + result.orderNo + "?created=1");
     } catch (err) {
@@ -99,7 +98,7 @@ function NewOrderForm() {
     ? newJobMessage({
         technicianName: form.technician, orderNo: "ORDER####", serviceType: form.serviceType,
         customerName: form.customerName || "Customer", address: form.address || "Address",
-        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null, quotedPrice: price || 0
+        scheduledAt: myLocalInputToIso(form.scheduledAt), quotedPrice: price || 0
       })
     : "";
 
@@ -147,7 +146,7 @@ function NewOrderForm() {
               <label className="label">Branch
                 <select className="field-input" value={form.branch} onChange={(e) => update("branch", e.target.value)}>{branchOptions.map((s) => <option key={s}>{s}</option>)}</select>
               </label>
-              <label className="label">Preferred slot
+              <label className="label"><span>Preferred slot <span className="hint">· Malaysia time</span></span>
                 <input type="datetime-local" className="field-input num" value={form.scheduledAt} onChange={(e) => update("scheduledAt", e.target.value)} />
               </label>
             </div>

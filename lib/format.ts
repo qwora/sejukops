@@ -71,3 +71,22 @@ export function startOfMyMonth(date = new Date()) {
 export function initials(name: string) {
   return (name || "?").trim().split(/\s+/).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 }
+
+/*
+ * <input type="datetime-local"> has no timezone. The business runs on Malaysia time,
+ * so we always read and write these values as Asia/Kuala_Lumpur (UTC+8), whatever
+ * timezone the viewer's computer is set to.
+ */
+const MY_OFFSET_MS = 8 * 3600000;
+
+/** "2026-10-28T11:00" (Malaysia time) → ISO string, or null when empty/invalid. */
+export function myLocalInputToIso(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value.slice(0, 16) + ":00+08:00");
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+/** ISO string → "YYYY-MM-DDTHH:mm" in Malaysia time, for datetime-local inputs. */
+export function isoToMyLocalInput(iso: string | Date) {
+  return new Date(new Date(iso).getTime() + MY_OFFSET_MS).toISOString().slice(0, 16);
+}

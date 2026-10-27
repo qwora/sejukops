@@ -66,7 +66,7 @@ function Done() {
         {completion && (
           <p className="mt-2 text-xs text-ink-muted">
             {completion.paymentAmount > 0 && <span className="mr-2 rounded-full bg-st-asg-bg px-2 py-0.5 text-[11px] font-semibold text-st-asg-fg">{completion.paymentMethod}</span>}
-            {completion.files.length} evidence {completion.files.length === 1 ? "file" : "files"} attached
+            {completion.files.length} evidence {completion.files.length === 1 ? "file" : "files"}{completion.receipt ? " · receipt" : ""} attached
           </p>
         )}
       </div>

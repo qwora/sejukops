@@ -76,9 +76,10 @@ export async function createOrder(actor: Actor, body: Record<string, unknown>) {
     !input.customerName && "customer name",
     !input.customerPhone && "phone",
     !input.address && "address",
-    !(input.quotedPrice >= 0) && "quoted price"
+    (body.quotedPrice === undefined || body.quotedPrice === "" || Number.isNaN(input.quotedPrice)) && "quoted price"
   ].filter(Boolean);
   if (missing.length) throw new WorkflowError("Please fill in: " + missing.join(", ") + ".");
+  if (input.quotedPrice < 0) throw new WorkflowError("Quoted price can’t be negative.");
   if (!isValidMyPhone(input.customerPhone)) throw new WorkflowError("Enter a valid Malaysian phone number, e.g. 012-345 6789.");
   if (!serviceOptions.includes(input.serviceType)) throw new WorkflowError("Choose a service type from the list.");
   if (!branchOptions.includes(input.branch)) throw new WorkflowError("Choose a branch from the list.");
