@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MessageCircle } from "lucide-react";
+import { DocumentImport } from "@/components/orders/document-import";
 import { DesktopShell, PageHeader } from "@/components/shell/desktop-shell";
 import { Avatar, Badge, Button, Card, cx, ErrorBanner } from "@/components/ui/primitives";
 import { listOrders, listTechnicians } from "@/lib/data";
@@ -109,6 +110,17 @@ function NewOrderForm() {
 
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-4">
+          <DocumentImport
+            onExtract={(fields) =>
+              setForm((current) => {
+                const next = { ...current };
+                for (const [key, value] of Object.entries(fields)) {
+                  if (value && key in next) (next as Record<string, string>)[key] = value;
+                }
+                return next;
+              })
+            }
+          />
           <Card title="Customer">
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="label">Customer name

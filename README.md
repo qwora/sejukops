@@ -24,13 +24,13 @@ One Next.js app, one Supabase database, three role-specific experiences.
 | Module | Status | Where |
 | --- | --- | --- |
 | 1 · Admin order submission | ✅ + both bonuses (summary page, WhatsApp to technician) | `/admin/orders/new` → `/admin/orders/[id]` |
-| 2 · Technician service job | ✅ + payment bonus, feedback message bonus, manager notified | `/technician/jobs/...` |
+| 2 · Technician service job | ✅ + payment bonus (amount, method, receipt photo), feedback message bonus, manager notified | `/technician/jobs/...` |
 | 3 · WhatsApp trigger on Job Done | ✅ server-side trigger + wa.me deep link | `lib/server/orders.ts → completeOrder` |
 | Bonus · KPI dashboard | ✅ jobs, amount, postpone/reschedule, leaderboard, chart, branch view | `/manager/dashboard` |
 | AI · Operations query window | ✅ interpret → query → format | `/manager/assistant`, `POST /api/operations/query` |
-| Advanced · AI workflow supervisor | ✅ amount over quote, no photos, unexplained extras, underpayment | `lib/supervisor.ts`, review screens, `flagged_jobs` query |
+| Advanced · AI workflow supervisor | ✅ rule flags (amount over quote, no photos, unexplained extras, underpayment) + AI review note comparing with similar jobs | `lib/supervisor.ts`, `POST /api/orders/[no]/ai-review`, review screen |
 | Advanced · AI operational insight | ✅ overloaded technicians vs team average | dashboard insight + `overloaded_technicians` query |
-| Advanced · AI document understanding | ❌ not built | — |
+| Advanced · AI document understanding | ✅ photo of a job sheet / quotation / WhatsApp screenshot, or pasted text → name, phone, address, service, problem, amount, date | Create order → *Fill from a document*, `POST /api/ai/extract` |
 | Auth | ✅ mock role selector **and** real Supabase Auth (bonus) | `/login`, `/signup` |
 
 ## Tech stack
@@ -98,6 +98,19 @@ The model never sees the database, credentials or unrelated rows, and cannot wri
 - Dates are interpreted in Malaysia time using fixed periods; custom date ranges aren't parsed.
 - The model may phrase things differently between runs, but numbers come from the query rows. If AI is down, rule-based answers are used.
 - AI Gateway free credit is limited; heavy use would need paid credit.
+
+### Other AI features
+
+- **Document understanding** (`POST /api/ai/extract`, Admin): a photo or pasted message is sent to the model with a fixed JSON schema. The result is validated (service type and branch must match the dropdown lists, phone normalised, price must be a number) and only fills the form. The admin checks it and saves; nothing is written by the AI.
+- **Workflow supervisor** (`POST /api/orders/[no]/ai-review`, Manager): rule flags are always computed. The AI then reads this one job (amounts, extras, work done, evidence and payment) plus the median final amount of similar jobs in the last 60 days, and returns *approve* or *check* with a 2–3 sentence reason. A high-severity rule flag can never be overridden to *approve*.
+
+## Challenges
+
+- **The email rate limit.** Supabase's free mailer sends 2 emails per hour, so signups failed. The real login bug was underneath it: the code read a `name` column, but the table has `full_name`. Fixed with a database trigger that creates profiles, confirmation emails switched off, and one-click reviewer access.
+- **Keeping AI honest.** Free-form text-to-SQL was too risky. The model only chooses from a fixed list of intents, queries are typed, and answers are checked. If the AI's wording drops a figure from the verified answer, the verified answer is shown instead.
+- **No AI key or budget.** Vercel AI Gateway authenticates deployed functions with OIDC, so no secret is stored, and the free credit covers `gpt-4o-mini`. Blocked models are skipped automatically.
+- **WhatsApp without the Business API.** Built a notifications table and a server trigger, so delivery is a deep link today and can become an API call later without changing the workflow.
+- **One codebase, two very different users.** Admins need density; technicians need speed with one hand. Solved with shared tokens and status colours but separate shells and layouts.
 
 ## Running locally
 

@@ -170,7 +170,24 @@ export function AmountBreakdown({ order, completion }: { order: ServiceOrder; co
             </span>
           </div>
         )}
+        {completion?.receipt && <ReceiptLink path={completion.receipt.path} />}
       </div>
     </Card>
+  );
+}
+
+function ReceiptLink({ path }: { path: string }) {
+  const [url, setUrl] = useState("");
+  useEffect(() => {
+    signedEvidenceUrls([path]).then((urls) => setUrl(urls[path] ?? "")).catch(() => undefined);
+  }, [path]);
+  return (
+    <a href={url || undefined} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2.5 rounded-[10px] border border-line p-2 text-[12.5px] font-semibold text-ink-2 hover:bg-[#FAFAFA]">
+      <span className="h-10 w-10 flex-none overflow-hidden rounded-md bg-[#F1F1F1]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {url && <img src={url} alt="Payment receipt" className="h-full w-full object-cover" />}
+      </span>
+      Payment receipt photo →
+    </a>
   );
 }

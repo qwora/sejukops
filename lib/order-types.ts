@@ -45,6 +45,7 @@ export type ServiceCompletion = {
   paymentAmount: number;
   paymentMethod: string;
   files: Array<{ name: string; path: string; type: string }>;
+  receipt: { name: string; path: string; type: string } | null;
   completedAt: string;
 };
 

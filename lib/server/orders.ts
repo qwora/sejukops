@@ -234,6 +234,9 @@ export async function completeOrder(actor: Actor, orderNo: string, body: Record<
     if (typeof file.path !== "string" || !file.path.startsWith(order.order_no + "/")) throw new WorkflowError("Invalid evidence file.");
   }
 
+  const receipt = body.receipt && typeof body.receipt === "object" ? (body.receipt as Record<string, unknown>) : null;
+  if (receipt && (typeof receipt.path !== "string" || !receipt.path.startsWith(order.order_no + "/"))) throw new WorkflowError("Invalid receipt file.");
+
   const paymentAmount = Math.max(0, Number(body.paymentAmount) || 0);
   const paymentMethod = text(body.paymentMethod, 40) || (paymentAmount > 0 ? "Cash" : "Not recorded");
   const completedAt = new Date().toISOString();
@@ -270,6 +273,21 @@ export async function completeOrder(actor: Actor, orderNo: string, body: Record<
         file_type: text(file.type, 100) || "application/octet-stream",
         uploaded_by: actor.profileId
       })))
+      .throwOnError();
+  }
+
+  if (receipt) {
+    await db
+      .from("service_files")
+      .insert({
+        order_id: order.id,
+        completion_id: completion.id,
+        file_path: String(receipt.path),
+        file_name: text(receipt.name, 200) || "receipt",
+        file_type: text(receipt.type, 100) || "image/jpeg",
+        uploaded_by: actor.profileId,
+        kind: "receipt"
+      })
       .throwOnError();
   }
 

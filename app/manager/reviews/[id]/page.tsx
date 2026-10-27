@@ -7,6 +7,7 @@ import { DesktopShell, PageHeader } from "@/components/shell/desktop-shell";
 import { Badge, Button, Card, cx, EmptyState, ErrorBanner, LinkButton, Notice, PageLoading, StatusPill, StatusStepper } from "@/components/ui/primitives";
 import { ActivityTimeline, AmountBreakdown, CustomerCard, EvidenceGrid, WhatsAppMessages } from "@/components/orders/order-parts";
 import { getOrderBundle } from "@/lib/data";
+import { AiReviewNote } from "@/components/orders/ai-review-note";
 import { apiPost } from "@/lib/api";
 import { useLoad } from "@/lib/use-load";
 import { formatDateTime, formatTime } from "@/lib/format";
@@ -88,7 +89,7 @@ function ReviewDetail() {
               <div className="flex items-center gap-2">
                 {flags.length ? <Sparkles className="h-[18px] w-[18px] text-ai" /> : <ShieldCheck className="h-[18px] w-[18px] text-brand" />}
                 <h2 className={cx("text-sm font-semibold", flags.length ? "text-ai-ink" : "text-brand-ink")}>Supervisor check · {flags.length ? flags.length + (flags.length === 1 ? " flag" : " flags") : "no issues found"}</h2>
-                <span className="ml-auto text-xs text-ink-muted">Automatic rules on amount, evidence and payment</span>
+                <span className="ml-auto text-xs text-ink-muted">Rules + AI review of this job</span>
               </div>
               {flags.map((flag) => (
                 <div key={flag.code} className="flex items-start gap-2.5 rounded-[10px] bg-white p-3 shadow-[0_0_0_1px_#EDE4FB]">
@@ -96,6 +97,7 @@ function ReviewDetail() {
                   <p className="text-[13px] leading-relaxed"><b>{flag.title}.</b> {flag.detail}</p>
                 </div>
               ))}
+              {canReview && <AiReviewNote orderNo={order.orderNo} />}
             </section>
           )}
 

@@ -128,3 +128,6 @@ begin
   return new;
 end;
 $$;
+
+-- 8. Payment receipt photo is stored separately from job evidence.
+alter table public.service_files add column if not exists kind text not null default 'evidence';

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, ChevronLeft, FileText, Plus, Trash2, X } from "lucide-react";
+import { Camera, Check, ChevronLeft, FileText, Plus, Trash2, X } from "lucide-react";
 import { MobileShell } from "@/components/shell/mobile-shell";
 import { ErrorBanner, Skeleton, cx } from "@/components/ui/primitives";
 import { getOrderBundle, uploadEvidence } from "@/lib/data";
@@ -48,10 +48,13 @@ function CompleteForm() {
   const [paidAmount, setPaidAmount] = useState<string | null>(null);
   const [formError, setFormError] = useState("");
   const [stage, setStage] = useState<"" | "uploading" | "saving">("");
+  const [receipt, setReceipt] = useState<Picked | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const receiptRef = useRef<HTMLInputElement>(null);
   const submitted = useRef(false);
 
   useEffect(() => () => files.forEach((f) => URL.revokeObjectURL(f.url)), [files]);
+  useEffect(() => () => { if (receipt) URL.revokeObjectURL(receipt.url); }, [receipt]);
 
   const extraTotal = useMemo(() => extras.reduce((sum, e) => sum + (Number(e.amount) || 0), 0), [extras]);
   const finalAmount = calculateFinalAmount(bundle?.order.quotedPrice ?? 0, extraTotal);
@@ -110,8 +113,10 @@ function CompleteForm() {
     submitted.current = true;
     setFormError("");
     try {
-      setStage(files.length ? "uploading" : "saving");
+      const withReceipt = receipt && payment !== "Not paid";
+      setStage(files.length || withReceipt ? "uploading" : "saving");
       const uploaded = files.length ? await uploadEvidence(order.orderNo, files.map((f) => f.file)) : [];
+      const receiptFile = withReceipt ? (await uploadEvidence(order.orderNo, [new File([receipt.file], "receipt-" + receipt.file.name, { type: receipt.file.type })]))[0] : null;
       setStage("saving");
       await apiPost(`/api/orders/${order.orderNo}/complete`, {
         workDone: description,
@@ -119,7 +124,8 @@ function CompleteForm() {
         remarks: remarks.trim(),
         paymentAmount: paid,
         paymentMethod: payment === "Not paid" ? "Not recorded" : payment,
-        files: uploaded
+        files: uploaded,
+        receipt: receiptFile
       });
       router.replace(`/technician/jobs/${order.orderNo}/success`);
     } catch (err) {
@@ -237,6 +243,26 @@ function CompleteForm() {
                 <input inputMode="decimal" value={paidAmount ?? finalAmount.toFixed(2)} onChange={(e) => setPaidAmount(e.target.value.replace(/[^\d.]/g, ""))} className="num w-full bg-transparent pl-1.5 text-right text-[15px] font-bold text-ink outline-none" />
               </span>
             </label>
+          )}
+          {payment !== "Not paid" && (
+            <div className="mt-3 flex items-center gap-3 border-t border-line pt-3">
+              {receipt ? (
+                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-xl bg-[#E4ECE8]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={receipt.url} alt="Payment receipt" className="h-full w-full object-cover" />
+                  <button type="button" onClick={() => setReceipt(null)} aria-label="Remove receipt" className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"><X className="h-3 w-3" /></button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => receiptRef.current?.click()} className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border-[1.5px] border-dashed border-[#9BBFB1] bg-[#F2FAF6] text-brand" aria-label="Add receipt photo">
+                  <Camera className="h-5 w-5" />
+                </button>
+              )}
+              <div className="text-[13px] leading-snug">
+                <p className="font-semibold text-ink">Receipt photo <span className="font-normal text-ink-faint">(optional)</span></p>
+                <p className="text-xs text-ink-muted">{receipt ? receipt.file.name : "Transfer slip, QR screenshot or signed receipt"}</p>
+              </div>
+              <input ref={receiptRef} type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" aria-label="Receipt photo" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > MAX_FILE_BYTES) setFormError("Receipt is over 25 MB."); else setReceipt({ id: Date.now(), file: f, url: URL.createObjectURL(f) }); } e.target.value = ""; }} />
+            </div>
           )}
         </section>
 

@@ -20,7 +20,7 @@ const DEFAULT_MODELS = [
 let preferred: string | null = null;
 const blocked = new Set<string>();
 
-export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
+export type ChatMessage = { role: "system" | "user" | "assistant"; content: string | Array<Record<string, unknown>> };
 
 export function gatewayToken(request?: Request) {
   return process.env.AI_GATEWAY_API_KEY || request?.headers.get("x-vercel-oidc-token") || process.env.VERCEL_OIDC_TOKEN || null;

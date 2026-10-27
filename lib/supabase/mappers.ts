@@ -4,7 +4,7 @@ import type { ActivityEntry, AppNotification, ServiceCompletion, ServiceOrder, T
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const ORDER_SELECT = "*, technicians(id,name)";
-export const COMPLETION_SELECT = "*, orders(order_no), technicians(name), service_files(file_name,file_path,file_type)";
+export const COMPLETION_SELECT = "*, orders(order_no), technicians(name), service_files(file_name,file_path,file_type,kind)";
 
 export function toOrder(row: any): ServiceOrder {
   return {
@@ -45,7 +45,8 @@ export function toCompletion(row: any): ServiceCompletion {
     remarks: row.remarks ?? "",
     paymentAmount: Number(row.payment_amount ?? 0),
     paymentMethod: row.payment_method ?? "Not recorded",
-    files: (row.service_files ?? []).map((file: any) => ({ name: file.file_name, path: file.file_path, type: file.file_type ?? "" })),
+    files: (row.service_files ?? []).filter((file: any) => file.kind !== "receipt").map((file: any) => ({ name: file.file_name, path: file.file_path, type: file.file_type ?? "" })),
+    receipt: (row.service_files ?? []).filter((file: any) => file.kind === "receipt").map((file: any) => ({ name: file.file_name, path: file.file_path, type: file.file_type ?? "" }))[0] ?? null,
     completedAt: row.completed_at ?? row.created_at
   };
 }
