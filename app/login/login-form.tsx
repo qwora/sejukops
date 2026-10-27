@@ -42,9 +42,9 @@ export function LoginForm() {
       const useAccount = role !== "technician" || technician === "Ali";
       if (useAccount) {
         const response = await fetch("/api/auth/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) });
-        if (response.ok) {
-          const tokens = (await response.json()) as { access_token: string; refresh_token: string };
-          await supabase.auth.setSession(tokens);
+        const tokens = (await response.json().catch(() => ({}))) as { access_token?: string; refresh_token?: string };
+        if (response.ok && tokens.access_token && tokens.refresh_token) {
+          await supabase.auth.setSession({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
           await session.refresh();
           router.push(roleDestinations[role]);
           return;

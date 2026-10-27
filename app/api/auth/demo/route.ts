@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 /** One-click reviewer sign-in. Returns a real Supabase session; no email is sent. */
 export async function POST(request: Request) {
   const password = process.env.DEMO_ACCOUNT_PASSWORD;
-  if (!password) return NextResponse.json({ error: "Reviewer accounts are not configured.", fallback: "demo" }, { status: 404 });
+  if (!password) return NextResponse.json({ configured: false, fallback: "demo" });
 
   const { role } = (await request.json().catch(() => ({}))) as { role?: AppRole };
   const account = role ? DEMO_ACCOUNTS[role] : undefined;
