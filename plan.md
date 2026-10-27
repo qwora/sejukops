@@ -381,7 +381,9 @@ The message should contain:
 
 The production WhatsApp Cloud API can be added later through server-side environment variables without changing the job workflow.
 
-### Phase 5 — KPI dashboard
+### Phase 5 — KPI dashboard (implemented)
+
+The first KPI slice is now live in `app/manager/dashboard/page.tsx`. It loads orders and service completions through the Supabase data-access layer and derives the current week's completed jobs, final amounts, jobs awaiting review, active orders and technician leaderboard. The view displays a clear live-data label and keeps the empty state safe when no completions exist.
 
 Deliverables:
 

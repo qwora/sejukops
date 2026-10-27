@@ -48,7 +48,13 @@ The assessment permits a mock role selector. Supabase Auth may be added later if
 
 ## Current implementation
 
-Phase 0: project documentation and architecture foundation.
+Current implementation:
+
+- Phase 0: project documentation and architecture foundation
+- Phase 2: Supabase-backed admin order creation, assignment and order details
+- Phase 3: mobile technician jobs, evidence upload, completion success and history
+- Phase 4: manager review queue and manual WhatsApp deep links
+- Phase 5: data-backed weekly KPI dashboard and technician leaderboard
 
 See plan.md for the complete implementation plan.
 
