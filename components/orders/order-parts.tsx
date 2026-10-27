@@ -15,6 +15,7 @@ const ACTION_TEXT: Record<string, string> = {
   reassign: "Technician reassigned",
   reschedule: "Rescheduled",
   start: "Job started",
+  decline: "Declined by technician",
   complete: "Job marked done",
   job_completed: "Job marked done",
   approve: "Reviewed and approved",
@@ -24,7 +25,7 @@ const ACTION_TEXT: Record<string, string> = {
 };
 
 const ACTION_DOT: Record<string, string> = {
-  complete: "#0B6E4F", job_completed: "#0B6E4F", approve: "#5E35B1", return: "#B42318", start: "#C2620A",
+  complete: "#0B6E4F", job_completed: "#0B6E4F", approve: "#5E35B1", return: "#B42318", decline: "#B42318", start: "#C2620A",
   assign: "#0E7490", reassign: "#0E7490", whatsapp_sent: "#25D366", close: "#01202F", reschedule: "#C2620A"
 };
 
@@ -102,7 +103,7 @@ export function WhatsAppMessages({ notifications, onSent }: { notifications: App
       {internal.map((item) => (
         <div key={item.id} className="flex items-start gap-2 text-[12.5px] text-ink-muted">
           <Check className="mt-0.5 h-3.5 w-3.5 flex-none text-ai" />
-          <span><span className="font-medium text-ink-2">Manager notified:</span> {item.message}</span>
+          <span><span className="font-medium text-ink-2">{item.audience === "admin" ? "Admin" : "Manager"} notified:</span> {item.message}</span>
         </div>
       ))}
     </Card>

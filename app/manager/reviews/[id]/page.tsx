@@ -10,6 +10,7 @@ import { getOrderBundle } from "@/lib/data";
 import { AiReviewNote } from "@/components/orders/ai-review-note";
 import { apiPost } from "@/lib/api";
 import { useLoad } from "@/lib/use-load";
+import { useSession } from "@/lib/session";
 import { formatDateTime, formatTime } from "@/lib/format";
 import { supervisorFlags } from "@/lib/supervisor";
 
@@ -23,6 +24,7 @@ export default function ReviewDetailPage() {
 
 function ReviewDetail() {
   const { id } = useParams<{ id: string }>();
+  const session = useSession();
   const { data: bundle, error, loading, reload } = useLoad(() => getOrderBundle(id), [id]);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState("");
@@ -35,7 +37,9 @@ function ReviewDetail() {
 
   const { order, completion, activity, notifications, review } = bundle;
   const flags = supervisorFlags(order, completion);
-  const canReview = order.status === "Job Done";
+  // Only managers approve or return; admins see the same record read-only.
+  const canReview = order.status === "Job Done" && session.role === "manager";
+  const awaitingManager = order.status === "Job Done" && session.role !== "manager";
   const minutes = completion && order.scheduledAt ? Math.round((new Date(completion.completedAt).getTime() - new Date(order.scheduledAt).getTime()) / 60000) : null;
 
   async function act(action: "approve" | "return" | "close") {
@@ -71,6 +75,7 @@ function ReviewDetail() {
         subtitle={completion ? `Completed ${formatDateTime(completion.completedAt)} by ${completion.technicianName}` : "Not completed yet"}
         actions={
           <>
+            {awaitingManager && <span className="rounded-full bg-st-done-bg px-3 py-1.5 text-xs font-medium text-st-done-fg">Waiting for manager review</span>}
             {canReview && <Button icon={<CornerUpLeft className="h-4 w-4" />} loading={busy === "return"} onClick={() => act("return")}>Return to technician</Button>}
             {canReview && <Button variant="primary" icon={<ShieldCheck className="h-4 w-4" />} loading={busy === "approve"} onClick={() => act("approve")}>Mark as reviewed</Button>}
             {order.status === "Reviewed" && <Button variant="primary" loading={busy === "close"} onClick={() => act("close")}>Close order</Button>}
@@ -97,7 +102,7 @@ function ReviewDetail() {
                   <p className="text-[13px] leading-relaxed"><b>{flag.title}.</b> {flag.detail}</p>
                 </div>
               ))}
-              {canReview && <AiReviewNote orderNo={order.orderNo} />}
+              {order.status === "Job Done" && <AiReviewNote orderNo={order.orderNo} />}
             </section>
           )}
 

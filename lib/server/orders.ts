@@ -168,10 +168,26 @@ export async function runAction(actor: Actor, orderNo: string, action: WorkflowA
     return { status: current };
   }
 
-  if (action === "start") {
+  if (action === "start" || action === "decline") {
     if (actor.technicianName && order.technicians?.name !== actor.technicianName) {
-      throw new WorkflowError("Only the assigned technician can start this job.", 403);
+      throw new WorkflowError("Only the assigned technician can " + action + " this job.", 403);
     }
+  }
+
+  if (action === "decline") {
+    if (!note) throw new WorkflowError("Tell the admin why you can't take this job.");
+    const technician = order.technicians?.name ?? actor.name;
+    // Back to New and unassigned, so the admin can pick someone else.
+    await db.from("orders").update({ status: statusToDb.New, assigned_technician_id: null }).eq("id", order.id).throwOnError();
+    await logActivity(db, actor, order.id, "decline", current, "New", note, { technician });
+    await notify(db, {
+      orderId: order.id,
+      channel: "internal",
+      audience: "admin",
+      event: "job_declined",
+      message: `${order.order_no} declined by ${technician}: ${note}. Needs a new technician.`
+    });
+    return { status: "New" as OrderStatus };
   }
 
   const next = check.next;

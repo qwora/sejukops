@@ -21,6 +21,8 @@ export default function TechnicianJobPage() {
   );
 }
 
+const DECLINE_REASONS = ["Not feeling well", "Can’t make the time", "Too far from my area", "Needs a different skill"];
+
 const CHECKLIST = ["Arrived and met customer", "Diagnosed the units", "Serviced and tested", "Before / after photos taken"];
 
 function JobView() {
@@ -31,6 +33,8 @@ function JobView() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [checks, setChecks] = useState<boolean[]>([true, false, false, false]);
+  const [declining, setDeclining] = useState(false);
+  const [reason, setReason] = useState("");
 
   if (loading && !bundle) {
     return <div className="space-y-3 p-4"><Skeleton className="h-24 w-full rounded-2xl" /><Skeleton className="h-64 w-full rounded-2xl" /></div>;
@@ -41,6 +45,22 @@ function JobView() {
   const { order, completion, review } = bundle;
   const mine = !session.technicianName || order.assignedTechnician === session.technicianName;
   const returned = order.status === "In Progress" && review?.status === "returned";
+
+  async function decline() {
+    if (!reason.trim()) {
+      setActionError("Pick or type a reason so the admin can reassign it.");
+      return;
+    }
+    setBusy(true);
+    setActionError("");
+    try {
+      await apiPost(`/api/orders/${id}/action`, { action: "decline", notes: reason.trim() });
+      router.replace("/technician/jobs");
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not decline the job.");
+      setBusy(false);
+    }
+  }
 
   async function start() {
     setBusy(true);
@@ -100,6 +120,31 @@ function JobView() {
               {busy ? "Starting…" : "Accept & start job"}
             </button>
           </div>
+          {mine && !declining && (
+            <button onClick={() => setDeclining(true)} className="mx-auto h-11 px-4 text-[14px] font-medium text-ink-muted underline-offset-4 hover:text-danger hover:underline">
+              Can’t take this job?
+            </button>
+          )}
+          {declining && (
+            <div className="flex flex-col gap-3 rounded-3xl border border-line bg-canvas p-4 animate-fade-up">
+              <p className="text-sm font-medium text-ink">Why can’t you take it? The admin will reassign it.</p>
+              <div className="flex flex-wrap gap-2">
+                {DECLINE_REASONS.map((item) => (
+                  <button key={item} type="button" aria-pressed={reason === item} onClick={() => setReason(item)} className={cx("h-10 rounded-full px-3.5 text-[13px] font-medium transition", reason === item ? "bg-navy text-white" : "bg-white text-ink-2 shadow-sec")}>
+                    {item}
+                  </button>
+                ))}
+              </div>
+              <label className="block">
+                <span className="sr-only">Other reason</span>
+                <input value={DECLINE_REASONS.includes(reason) ? "" : reason} onChange={(e) => setReason(e.target.value)} placeholder="Or type a reason" maxLength={200} className="m-field h-12 text-sm" />
+              </label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => { setDeclining(false); setReason(""); }} className="h-12 flex-1 rounded-full bg-white text-sm font-medium text-ink shadow-sec">Keep the job</button>
+                <button type="button" onClick={decline} disabled={busy} className="h-12 flex-1 rounded-full bg-danger text-sm font-medium text-white disabled:opacity-60">{busy ? "Sending…" : "Decline job"}</button>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     );

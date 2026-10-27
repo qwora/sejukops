@@ -12,7 +12,8 @@ import { cx } from "@/components/ui/primitives";
 const eventLabel: Record<string, string> = {
   job_done: "Job done",
   job_assigned: "Job assigned",
-  job_returned: "Job returned"
+  job_returned: "Job returned",
+  job_declined: "Job declined"
 };
 
 export function NotificationBell({ orderHref }: { orderHref: (orderNo: string) => string }) {

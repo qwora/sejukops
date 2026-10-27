@@ -20,7 +20,7 @@ export const statusFromDb: Record<string, OrderStatus> = {
   closed: "Closed"
 };
 
-export type WorkflowAction = "assign" | "start" | "complete" | "approve" | "return" | "close" | "reschedule";
+export type WorkflowAction = "assign" | "start" | "decline" | "complete" | "approve" | "return" | "close" | "reschedule";
 
 type Rule = { roles: AppRole[]; from: OrderStatus[]; to?: OrderStatus; label: string };
 
@@ -32,6 +32,7 @@ export const WORKFLOW: Record<WorkflowAction, Rule> = {
   assign: { roles: ["admin"], from: ["New", "Assigned"], to: "Assigned", label: "Technician assigned" },
   reschedule: { roles: ["admin"], from: ["New", "Assigned"], label: "Job rescheduled" },
   start: { roles: ["technician"], from: ["Assigned"], to: "In Progress", label: "Job started" },
+  decline: { roles: ["technician"], from: ["Assigned"], to: "New", label: "Declined by technician" },
   complete: { roles: ["technician"], from: ["In Progress"], to: "Job Done", label: "Job marked done" },
   approve: { roles: ["manager"], from: ["Job Done"], to: "Reviewed", label: "Reviewed by manager" },
   return: { roles: ["manager"], from: ["Job Done"], to: "In Progress", label: "Returned to technician" },
