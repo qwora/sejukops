@@ -7,12 +7,12 @@ import { formatTime, relativeSlot } from "@/lib/format";
 import { cx } from "@/components/ui/primitives";
 
 export const JOB_STATE: Record<string, { label: string; className: string; dot: string }> = {
-  Assigned: { label: "ASSIGNED", className: "bg-st-asg-bg text-st-asg-fg", dot: "#0B4FB3" },
-  "In Progress": { label: "IN PROGRESS", className: "bg-st-prog-bg text-st-prog-fg", dot: "#E8A317" },
-  "Job Done": { label: "DONE", className: "bg-st-done-bg text-st-done-fg", dot: "#0B7A5A" },
+  Assigned: { label: "ASSIGNED", className: "bg-st-asg-bg text-st-asg-fg", dot: "#2E7BAA" },
+  "In Progress": { label: "IN PROGRESS", className: "bg-st-prog-bg text-st-prog-fg", dot: "#C2620A" },
+  "Job Done": { label: "DONE", className: "bg-st-done-bg text-st-done-fg", dot: "#0B6E4F" },
   Reviewed: { label: "REVIEWED", className: "bg-st-rev-bg text-st-rev-fg", dot: "#5E35B1" },
-  Closed: { label: "CLOSED", className: "bg-st-cls-bg text-st-cls-fg", dot: "#8A8A8A" },
-  New: { label: "NEW", className: "bg-st-new-bg text-st-new-fg", dot: "#8A8A8A" }
+  Closed: { label: "CLOSED", className: "bg-st-cls-bg text-st-cls-fg", dot: "#8AA2B0" },
+  New: { label: "NEW", className: "bg-st-new-bg text-st-new-fg", dot: "#8AA2B0" }
 };
 
 export function JobStateTag({ status }: { status: ServiceOrder["status"] }) {
@@ -41,7 +41,7 @@ export function NextJobCard({ job, returned }: { job: ServiceOrder; returned?: b
         <Link href={"/technician/jobs/" + job.orderNo} className="flex h-12 flex-1 items-center justify-center rounded-xl bg-brand text-[15px] font-bold text-white active:scale-[.99]">
           {inProgress ? "Continue job" : "Open job"}
         </Link>
-        <a href={"tel:+" + job.customerPhone} aria-label={"Call " + job.customerName} className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F1F1F1] text-ink">
+        <a href={"tel:+" + job.customerPhone} aria-label={"Call " + job.customerName} className="flex h-12 w-12 items-center justify-center rounded-xl bg-rail text-ink">
           <Phone className="h-[18px] w-[18px]" />
         </a>
       </div>
@@ -52,7 +52,7 @@ export function NextJobCard({ job, returned }: { job: ServiceOrder; returned?: b
 export function JobRow({ job }: { job: ServiceOrder }) {
   const done = ["Job Done", "Reviewed", "Closed"].includes(job.status);
   return (
-    <Link href={"/technician/jobs/" + job.orderNo} className="flex min-h-[56px] items-center gap-3 border-b border-[#F4F4F4] py-3 last:border-0">
+    <Link href={"/technician/jobs/" + job.orderNo} className="flex min-h-[56px] items-center gap-3 border-b border-line py-3 last:border-0">
       <span className={cx("num w-[44px] text-[13px] font-bold", done ? "text-ink-faint" : "text-ink")}>{job.scheduledAt ? formatTime(job.scheduledAt) : "—"}</span>
       <span className="h-2.5 w-2.5 flex-none rounded-full" style={{ background: JOB_STATE[job.status].dot }} aria-hidden />
       <span className="min-w-0 flex-1">

@@ -53,7 +53,7 @@ export function SignupForm() {
         <p className="mt-1.5 text-sm text-ink-muted">Creates a Supabase Auth account with a role profile.</p>
       </div>
       {error && <ErrorBanner message={error} />}
-      {notice && <p role="status" className="rounded-xl bg-brand-tint px-4 py-3 text-[13px] font-medium text-brand-ink">{notice}</p>}
+      {notice && <p role="status" className="rounded-xl bg-ok-tint px-4 py-3 text-[13px] font-medium text-ok">{notice}</p>}
       <form onSubmit={submit} className="space-y-3.5">
         <label className="label">Full name<input required autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} className="field-input h-10" /></label>
         <label className="label">Email<input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-input h-10" /></label>

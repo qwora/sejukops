@@ -69,7 +69,7 @@ function Queue() {
 
       {data && (
         <>
-          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-[#F1F1F1] md:grid-cols-4 [&>*]:bg-white">
+          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-rail md:grid-cols-4 [&>*]:bg-white">
             <Stat label="Waiting for review" value={rows.review.length} />
             <Stat label="Value waiting" value={money(waitingValue, 0)} />
             <Stat label="Flagged by supervisor" value={flagged} tone={flagged ? "danger" : undefined} />
@@ -89,7 +89,7 @@ function Queue() {
                   const diff = (completion?.finalAmount ?? order.quotedPrice) - order.quotedPrice;
                   return (
                     <li key={order.id}>
-                      <Link href={"/manager/reviews/" + order.orderNo} className="group flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[#F1F1F1] px-4 py-3.5 hover:bg-[#FAFAFA]">
+                      <Link href={"/manager/reviews/" + order.orderNo} className="group flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-line px-4 py-3.5 hover:bg-[#F7FAFC]">
                         <Avatar name={order.assignedTechnician} size={32} />
                         <div className="min-w-[220px] flex-1">
                           <div className="flex flex-wrap items-center gap-2">
@@ -130,7 +130,7 @@ function Queue() {
               </div>
               <ul>
                 {rows.approved.map(({ order, completion }) => (
-                  <li key={order.id} className="flex flex-wrap items-center gap-3 border-b border-[#F1F1F1] px-4 py-3">
+                  <li key={order.id} className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
                     <Link href={"/manager/reviews/" + order.orderNo} className="num text-[13px] font-semibold text-ink hover:underline">{order.orderNo}</Link>
                     <span className="flex-1 text-[13px] text-ink-2">{order.serviceType} · {order.assignedTechnician}</span>
                     <StatusPill status={order.status} />

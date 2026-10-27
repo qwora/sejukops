@@ -155,7 +155,7 @@ function CompleteForm() {
           <h2 className="text-sm font-bold text-ink">Work done</h2>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {WORK_CHIPS.map((chip) => (
-              <button key={chip} type="button" aria-pressed={chips.includes(chip)} onClick={() => toggleChip(chip)} className={cx(chipBase, chips.includes(chip) ? "bg-brand-tint text-brand-ink shadow-[inset_0_0_0_1.5px_#0B7A5A]" : "bg-[#F1F1F1] text-ink-2")}>
+              <button key={chip} type="button" aria-pressed={chips.includes(chip)} onClick={() => toggleChip(chip)} className={cx(chipBase, chips.includes(chip) ? "bg-brand-tint text-brand-ink shadow-[inset_0_0_0_1.5px_#2E7BAA]" : "bg-rail text-ink-2")}>
                 {chip}
               </button>
             ))}
@@ -173,12 +173,12 @@ function CompleteForm() {
           </div>
           <div className="mt-2.5 grid grid-cols-4 gap-2">
             {files.map((item) => (
-              <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-[#E4ECE8]">
+              <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-[#E1E8ED]">
                 {item.file.type.startsWith("image/") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.url} alt={item.file.name} className="h-full w-full object-cover" />
                 ) : (
-                  <span className="flex h-full flex-col items-center justify-center gap-1 p-1 text-center text-[10px] font-semibold text-[#2E4A40]"><FileText className="h-5 w-5" /><span className="line-clamp-2 break-all">{item.file.name}</span></span>
+                  <span className="flex h-full flex-col items-center justify-center gap-1 p-1 text-center text-[10px] font-semibold text-[#26475A]"><FileText className="h-5 w-5" /><span className="line-clamp-2 break-all">{item.file.name}</span></span>
                 )}
                 <button type="button" onClick={() => setFiles((current) => current.filter((f) => f.id !== item.id))} aria-label={"Remove " + item.file.name} className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white">
                   <X className="h-3.5 w-3.5" />
@@ -186,7 +186,7 @@ function CompleteForm() {
               </div>
             ))}
             {files.length < MAX_EVIDENCE_FILES && (
-              <button type="button" onClick={() => inputRef.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border-[1.5px] border-dashed border-[#9BBFB1] bg-[#F2FAF6] text-[11px] font-bold text-brand">
+              <button type="button" onClick={() => inputRef.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-[11px] font-bold text-brand">
                 <Plus className="h-5 w-5" strokeWidth={2.4} />Add
               </button>
             )}
@@ -201,7 +201,7 @@ function CompleteForm() {
             {EXTRA_PRESETS.map((preset) => {
               const on = extras.some((e) => e.label === preset.label);
               return (
-                <button key={preset.label} type="button" aria-pressed={on} onClick={() => togglePreset(preset)} className={cx(chipBase, "flex items-center gap-1", on ? "bg-ink text-white" : "bg-[#F1F1F1] text-ink-2")}>
+                <button key={preset.label} type="button" aria-pressed={on} onClick={() => togglePreset(preset)} className={cx(chipBase, "flex items-center gap-1", on ? "bg-ink text-white" : "bg-rail text-ink-2")}>
                   {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}{preset.label} <span className="num opacity-70">+{preset.amount}</span>
                 </button>
               );
@@ -230,7 +230,7 @@ function CompleteForm() {
           <h2 className="text-sm font-bold text-ink">Payment received</h2>
           <div className="mt-2.5 grid grid-cols-3 gap-1.5">
             {PAYMENT.map((method) => (
-              <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={cx("h-11 rounded-xl text-[13px] font-semibold transition", payment === method ? "bg-ink text-white" : "bg-[#F1F1F1] text-ink-2")}>
+              <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={cx("h-11 rounded-xl text-[13px] font-semibold transition", payment === method ? "bg-ink text-white" : "bg-rail text-ink-2")}>
                 {method}
               </button>
             ))}
@@ -247,13 +247,13 @@ function CompleteForm() {
           {payment !== "Not paid" && (
             <div className="mt-3 flex items-center gap-3 border-t border-line pt-3">
               {receipt ? (
-                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-xl bg-[#E4ECE8]">
+                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-xl bg-[#E1E8ED]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={receipt.url} alt="Payment receipt" className="h-full w-full object-cover" />
                   <button type="button" onClick={() => setReceipt(null)} aria-label="Remove receipt" className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
-                <button type="button" onClick={() => receiptRef.current?.click()} className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border-[1.5px] border-dashed border-[#9BBFB1] bg-[#F2FAF6] text-brand" aria-label="Add receipt photo">
+                <button type="button" onClick={() => receiptRef.current?.click()} className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-brand" aria-label="Add receipt photo">
                   <Camera className="h-5 w-5" />
                 </button>
               )}

@@ -24,8 +24,8 @@ const ACTION_TEXT: Record<string, string> = {
 };
 
 const ACTION_DOT: Record<string, string> = {
-  complete: "#0B7A5A", job_completed: "#0B7A5A", approve: "#5E35B1", return: "#B42318", start: "#E8A317",
-  assign: "#2F6FED", reassign: "#2F6FED", whatsapp_sent: "#25D366", close: "#1A1A1A", reschedule: "#E07B00"
+  complete: "#0B6E4F", job_completed: "#0B6E4F", approve: "#5E35B1", return: "#B42318", start: "#C2620A",
+  assign: "#0E7490", reassign: "#0E7490", whatsapp_sent: "#25D366", close: "#01202F", reschedule: "#C2620A"
 };
 
 export function ActivityTimeline({ entries, order }: { entries: ActivityEntry[]; order: ServiceOrder }) {
@@ -36,7 +36,7 @@ export function ActivityTimeline({ entries, order }: { entries: ActivityEntry[];
         <span className="absolute bottom-2 left-[3.5px] top-2 w-px bg-line" aria-hidden />
         {list.map((entry) => (
           <li key={entry.id} className="relative flex gap-3">
-            <span className="relative z-10 mt-[5px] h-2 w-2 flex-none rounded-full ring-2 ring-white" style={{ background: ACTION_DOT[entry.action] ?? "#8A8A8A" }} aria-hidden />
+            <span className="relative z-10 mt-[5px] h-2 w-2 flex-none rounded-full ring-2 ring-white" style={{ background: ACTION_DOT[entry.action] ?? "#8AA2B0" }} aria-hidden />
             <div className="text-[12.5px] leading-snug">
               <div className="text-ink">{ACTION_TEXT[entry.action] ?? entry.action}<span className="text-ink-muted"> · {entry.actor}</span></div>
               {entry.note && <div className="mt-0.5 text-ink-muted">“{entry.note}”</div>}
@@ -58,8 +58,8 @@ export function CustomerCard({ order }: { order: ServiceOrder }) {
         <div className="mt-1 text-ink-2">{order.address}</div>
       </div>
       <div className="flex gap-2">
-        <a href={"tel:+" + order.customerPhone} className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-white text-[13px] font-semibold text-ink-2 shadow-sec"><Phone className="h-3.5 w-3.5" />Call</a>
-        <a href={"https://wa.me/" + order.customerPhone} target="_blank" rel="noreferrer" className="inline-flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#E7F7EE] text-[13px] font-semibold text-brand-ink"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>
+        <a href={"tel:+" + order.customerPhone} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-white text-[13px] font-medium text-ink shadow-sec"><Phone className="h-3.5 w-3.5" />Call</a>
+        <a href={"https://wa.me/" + order.customerPhone} target="_blank" rel="noreferrer" className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-ok-tint text-[13px] font-medium text-ok"><MessageCircle className="h-3.5 w-3.5" />WhatsApp</a>
       </div>
     </Card>
   );
@@ -92,7 +92,7 @@ export function WhatsAppMessages({ notifications, onSent }: { notifications: App
             </div>
             <p className="whitespace-pre-line rounded-lg rounded-tl-sm bg-[#DCF8C6] px-3 py-2 text-[12.5px] leading-relaxed text-[#12301F]">{item.message}</p>
             {item.link && (
-              <a href={item.link} target="_blank" rel="noreferrer" onClick={() => mark(item)} className="mt-2 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-[#25D366] text-[13px] font-bold text-[#08361C] hover:bg-[#1FC15B]">
+              <a href={item.link} target="_blank" rel="noreferrer" onClick={() => mark(item)} className="mt-2 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-whatsapp text-[13px] font-semibold text-whatsapp-ink hover:brightness-95">
                 <MessageCircle className="h-4 w-4" />{isSent ? "Open again in WhatsApp" : "Send on WhatsApp"}
               </a>
             )}
@@ -129,13 +129,13 @@ export function EvidenceGrid({ completion }: { completion: ServiceCompletion }) 
         const isImage = file.type.startsWith("image/");
         const isVideo = file.type.startsWith("video/");
         return (
-          <a key={file.path} href={url} target="_blank" rel="noreferrer" title={file.name} className={cx("group relative block aspect-square overflow-hidden rounded-[10px] bg-gradient-to-br from-[#DDE7E3] to-[#C6D3CE]", !url && "pointer-events-none")}>
+          <a key={file.path} href={url} target="_blank" rel="noreferrer" title={file.name} className={cx("group relative block aspect-square overflow-hidden rounded-[10px] bg-gradient-to-br from-[#DCE7EE] to-[#C3D3DE]", !url && "pointer-events-none")}>
             {url && isImage && (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={url} alt={file.name} className="h-full w-full object-cover transition group-hover:scale-105" loading="lazy" />
             )}
             {(!isImage || !url) && (
-              <span className="flex h-full flex-col items-center justify-center gap-1 p-2 text-center text-[11px] font-semibold text-[#2E4A40]">
+              <span className="flex h-full flex-col items-center justify-center gap-1 p-2 text-center text-[11px] font-semibold text-[#26475A]">
                 {isVideo ? <PlayCircle className="h-6 w-6" /> : <FileText className="h-6 w-6" />}
                 <span className="line-clamp-2 break-all">{failed ? "Preview unavailable" : file.name}</span>
               </span>
@@ -165,7 +165,7 @@ export function AmountBreakdown({ order, completion }: { order: ServiceOrder; co
         {completion && (
           <div className="mt-2 flex justify-between py-1">
             <span className="text-ink-muted">Received</span>
-            <span className={cx("num font-semibold", completion.paymentAmount >= final ? "text-brand-ink" : completion.paymentAmount > 0 ? "text-warn" : "text-ink-muted")}>
+            <span className={cx("num font-semibold", completion.paymentAmount >= final ? "text-ok" : completion.paymentAmount > 0 ? "text-warn" : "text-ink-muted")}>
               {completion.paymentAmount > 0 ? money(completion.paymentAmount) + " · " + completion.paymentMethod : "Not recorded"}
             </span>
           </div>
@@ -182,8 +182,8 @@ function ReceiptLink({ path }: { path: string }) {
     signedEvidenceUrls([path]).then((urls) => setUrl(urls[path] ?? "")).catch(() => undefined);
   }, [path]);
   return (
-    <a href={url || undefined} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2.5 rounded-[10px] border border-line p-2 text-[12.5px] font-semibold text-ink-2 hover:bg-[#FAFAFA]">
-      <span className="h-10 w-10 flex-none overflow-hidden rounded-md bg-[#F1F1F1]">
+    <a href={url || undefined} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2.5 rounded-[10px] border border-line p-2 text-[12.5px] font-semibold text-ink-2 hover:bg-[#F7FAFC]">
+      <span className="h-10 w-10 flex-none overflow-hidden rounded-md bg-rail">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {url && <img src={url} alt="Payment receipt" className="h-full w-full object-cover" />}
       </span>

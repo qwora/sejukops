@@ -11,7 +11,7 @@ import { technicianOptions } from "@/lib/order-types";
 import { Button, cx, ErrorBanner } from "@/components/ui/primitives";
 
 const ROLES: Array<{ role: AppRole; name: string; desc: string; icon: React.ReactNode; tint: string }> = [
-  { role: "admin", name: "Admin", desc: "Create orders and assign technicians", icon: <ClipboardList className="h-5 w-5" />, tint: "bg-[#F1F1F1] text-ink" },
+  { role: "admin", name: "Admin", desc: "Create orders and assign technicians", icon: <ClipboardList className="h-5 w-5" />, tint: "bg-rail text-ink" },
   { role: "technician", name: "Technician", desc: "See today’s jobs and complete service", icon: <Wrench className="h-5 w-5" />, tint: "bg-brand-tint text-brand" },
   { role: "manager", name: "Manager", desc: "Review jobs, performance and ask AI", icon: <BarChart3 className="h-5 w-5" />, tint: "bg-st-rev-bg text-ai" }
 ];
@@ -81,7 +81,7 @@ export function LoginForm() {
         <p className="mt-1.5 text-sm text-ink-muted">Choose your role to continue. No password needed for the assessment demo.</p>
       </div>
 
-      {confirmed && <p className="rounded-xl bg-brand-tint px-4 py-3 text-[13px] font-medium text-brand-ink">Email confirmed. You can sign in now.</p>}
+      {confirmed && <p className="rounded-xl bg-ok-tint px-4 py-3 text-[13px] font-medium text-ok">Email confirmed. You can sign in now.</p>}
       {error && <ErrorBanner message={error} />}
 
       <fieldset className="flex flex-col gap-2.5">
@@ -93,7 +93,7 @@ export function LoginForm() {
               key={item.role}
               className={cx(
                 "flex cursor-pointer items-center gap-3.5 rounded-xl border bg-white px-4 py-3.5 transition",
-                selected ? "border-ink shadow-[0_0_0_1px_#1A1A1A]" : "border-line-strong/70 hover:border-ink-faint"
+                selected ? "border-ink shadow-[0_0_0_1px_#2E7BAA]" : "border-line-strong/70 hover:border-ink-faint"
               )}
             >
               <input type="radio" name="role" value={item.role} checked={selected} onChange={() => setRole(item.role)} className="sr-only" />

@@ -69,7 +69,7 @@ function JobView() {
           <p className="num mt-1.5 text-[34px] font-extrabold tracking-tight">{order.orderNo}</p>
         </div>
         <section className="relative mt-auto flex flex-col gap-4 rounded-t-3xl bg-white px-5 pb-6 pt-2.5 shadow-sheet">
-          <span className="mx-auto h-[5px] w-10 rounded-full bg-[#DADADA]" aria-hidden />
+          <span className="mx-auto h-[5px] w-10 rounded-full bg-line-strong" aria-hidden />
           <div className="flex items-center gap-3.5">
             <div className="flex-1">
               <p className="text-xs font-bold tracking-wide text-brand">NEW JOB ASSIGNED</p>
@@ -81,21 +81,21 @@ function JobView() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-xl bg-[#F4F5F4] px-3 py-2.5"><p className="text-[11px] text-ink-muted">When</p><p className="num mt-0.5 text-sm font-bold text-ink">{relativeSlot(order.scheduledAt)}</p></div>
-            <div className="rounded-xl bg-[#F4F5F4] px-3 py-2.5"><p className="text-[11px] text-ink-muted">Branch</p><p className="mt-0.5 text-sm font-bold text-ink">{order.branch}</p></div>
+            <div className="rounded-xl bg-canvas px-3 py-2.5"><p className="text-[11px] text-ink-muted">When</p><p className="num mt-0.5 text-sm font-bold text-ink">{relativeSlot(order.scheduledAt)}</p></div>
+            <div className="rounded-xl bg-canvas px-3 py-2.5"><p className="text-[11px] text-ink-muted">Branch</p><p className="mt-0.5 text-sm font-bold text-ink">{order.branch}</p></div>
           </div>
           <div className="flex gap-2.5 text-sm leading-snug">
             <MapPin className="h-[18px] w-[18px] flex-none text-brand" aria-hidden />
             <span><b className="text-ink">{order.customerName}</b><br /><span className="text-ink-muted">{order.address}</span></span>
           </div>
-          {order.problemDescription && <p className="rounded-xl bg-[#F7F7F7] px-3 py-2.5 text-[13px] leading-relaxed text-ink-2">{order.problemDescription}</p>}
+          {order.problemDescription && <p className="rounded-xl bg-canvas px-3 py-2.5 text-[13px] leading-relaxed text-ink-2">{order.problemDescription}</p>}
           {order.adminNotes && (
             <div className="flex gap-2.5 rounded-xl bg-[#FFF8EB] px-3 py-2.5 text-[13px] text-[#5C3800]"><MessageSquareText className="mt-0.5 h-4 w-4 flex-none" aria-hidden />{order.adminNotes}</div>
           )}
           {actionError && <ErrorBanner message={actionError} />}
           {!mine && <p className="text-center text-[13px] text-danger">This job is assigned to {order.assignedTechnician}.</p>}
           <div className="flex gap-2.5">
-            <a href={"tel:+" + order.customerPhone} className="flex h-[54px] items-center gap-2 rounded-[14px] bg-[#F1F1F1] px-5 text-[15px] font-bold text-ink-2"><Phone className="h-[18px] w-[18px]" />Call</a>
+            <a href={"tel:+" + order.customerPhone} className="flex h-[54px] items-center gap-2 rounded-[14px] bg-rail px-5 text-[15px] font-bold text-ink-2"><Phone className="h-[18px] w-[18px]" />Call</a>
             <button onClick={start} disabled={busy || !mine} className="flex h-[54px] flex-1 items-center justify-center rounded-[14px] bg-brand text-base font-extrabold text-white shadow-cta transition active:scale-[.99] disabled:opacity-60">
               {busy ? "Starting…" : "Accept & start job"}
             </button>
@@ -154,7 +154,7 @@ function JobView() {
           </div>
         </div>
         <div className="mt-3.5 grid grid-cols-2 gap-2">
-          <a href={"tel:+" + order.customerPhone} className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-[#F4F5F4] text-[13px] font-bold text-ink"><Phone className="h-4 w-4" />Call</a>
+          <a href={"tel:+" + order.customerPhone} className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-canvas text-[13px] font-bold text-ink"><Phone className="h-4 w-4" />Call</a>
           <a href={"https://wa.me/" + order.customerPhone} target="_blank" rel="noreferrer" className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-brand-tint text-[13px] font-bold text-brand-ink"><MessageCircle className="h-4 w-4" />WhatsApp</a>
         </div>
       </div>
@@ -176,8 +176,8 @@ function JobView() {
           <ul>
             {CHECKLIST.map((label, i) => (
               <li key={label}>
-                <button onClick={() => setChecks((current) => current.map((v, j) => (j === i ? !v : v)))} aria-pressed={checks[i]} className="flex min-h-[50px] w-full items-center gap-3 border-b border-[#F4F4F4] text-left last:border-0">
-                  <span className={cx("flex h-[26px] w-[26px] flex-none items-center justify-center rounded-lg transition", checks[i] ? "bg-brand" : "shadow-[inset_0_0_0_2px_#C9C9C9]")}>
+                <button onClick={() => setChecks((current) => current.map((v, j) => (j === i ? !v : v)))} aria-pressed={checks[i]} className="flex min-h-[50px] w-full items-center gap-3 border-b border-line text-left last:border-0">
+                  <span className={cx("flex h-[26px] w-[26px] flex-none items-center justify-center rounded-lg transition", checks[i] ? "bg-brand" : "shadow-[inset_0_0_0_2px_#C5D2DA]")}>
                     {checks[i] && <Check className="h-3.5 w-3.5 text-white" strokeWidth={3.5} />}
                   </span>
                   <span className={cx("flex-1 text-sm font-semibold", checks[i] ? "text-ink-faint line-through" : "text-ink")}>{label}</span>
@@ -189,7 +189,7 @@ function JobView() {
         <p className="px-2 text-center text-[11.5px] text-ink-faint">Checklist is a personal guide and isn’t saved.</p>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto max-w-[440px] border-t border-[#F1F1F1] bg-white px-5 pb-6 pt-3 md:absolute md:rounded-b-[28px]">
+      <div className="fixed inset-x-0 bottom-0 z-10 mx-auto max-w-[440px] border-t border-line bg-white px-5 pb-6 pt-3 md:absolute md:rounded-b-[28px]">
         <button onClick={() => router.push(`/technician/jobs/${order.orderNo}/complete`)} disabled={!mine} className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-brand text-base font-extrabold text-white shadow-cta active:scale-[.99] disabled:opacity-50">
           Complete job <ArrowRight className="h-[18px] w-[18px]" strokeWidth={2.6} />
         </button>

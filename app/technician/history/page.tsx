@@ -55,7 +55,7 @@ function HistoryView() {
               {items.map((item) => {
                 const order = data?.orders.find((o) => o.orderNo === item.orderNo);
                 return (
-                  <Link key={item.id} href={"/technician/jobs/" + item.orderNo} className="flex min-h-[56px] items-center gap-3 border-b border-[#F4F4F4] py-3 last:border-0">
+                  <Link key={item.id} href={"/technician/jobs/" + item.orderNo} className="flex min-h-[56px] items-center gap-3 border-b border-line py-3 last:border-0">
                     <span className="num w-[44px] text-[13px] font-bold text-ink-muted">{formatTime(item.completedAt)}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-ink">{order?.serviceType ?? item.orderNo}</span>

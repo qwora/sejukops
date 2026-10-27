@@ -59,7 +59,7 @@ function Today() {
           <div className="num text-[22px] font-extrabold text-ink">{doneToday}<span className="text-[15px] font-semibold text-ink-faint">/{totalToday}</span></div>
           <div className="mt-0.5 text-[11.5px] text-ink-muted">Done today</div>
         </div>
-        <div className="border-x border-[#F1F1F1]">
+        <div className="border-x border-line">
           <div className="num text-[22px] font-extrabold text-ink">{money(collected, 0)}</div>
           <div className="mt-0.5 text-[11.5px] text-ink-muted">Collected</div>
         </div>

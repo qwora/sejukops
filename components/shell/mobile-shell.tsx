@@ -16,8 +16,8 @@ import { cx } from "@/components/ui/primitives";
 export function MobileShell({ children, tabs = true }: { children: ReactNode; tabs?: boolean }) {
   return (
     <RoleGuard roles={["technician"]}>
-      <div className="min-h-screen bg-[#E4E6E4] md:py-6">
-        <div className="relative mx-auto flex min-h-screen max-w-[440px] flex-col overflow-hidden bg-[#F4F5F4] md:min-h-[calc(100vh-48px)] md:rounded-[28px] md:shadow-[0_20px_60px_rgba(0,0,0,.18)]">
+      <div className="min-h-screen bg-[#E3E9ED] md:py-6">
+        <div className="relative mx-auto flex min-h-screen max-w-[440px] flex-col overflow-hidden bg-canvas md:min-h-[calc(100vh-48px)] md:rounded-[28px] md:shadow-[0_20px_60px_rgba(0,0,0,.18)]">
           <div className={cx("flex-1", tabs && "pb-[76px]")}>{children}</div>
           {tabs && <TabBar />}
         </div>

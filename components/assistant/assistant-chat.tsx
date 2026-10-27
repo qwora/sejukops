@@ -81,7 +81,7 @@ export function AssistantChat({ compact = false }: { compact?: boolean }) {
             </div>
             <div className="flex flex-wrap gap-2">
               {SUGGESTIONS.map((item) => (
-                <button key={item} onClick={() => ask(item)} className="rounded-full bg-white px-3 py-1.5 text-left text-[12.5px] font-medium text-ink-2 shadow-[0_0_0_1px_#D9D9D9] transition hover:shadow-[0_0_0_1px_#1A1A1A]">
+                <button key={item} onClick={() => ask(item)} className="rounded-full bg-white px-3 py-1.5 text-left text-[12.5px] font-medium text-ink-2 shadow-[0_0_0_1px_#C5D2DA] transition hover:shadow-[0_0_0_1px_#2E7BAA]">
                   {item}
                 </button>
               ))}
@@ -130,9 +130,9 @@ function AnswerBlock({ answer, compact, onAsk }: { answer: AssistantAnswer; comp
     <>
       {answer.supported && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <code className="rounded-md bg-[#F1F1F1] px-2 py-0.5 font-mono text-[11px] text-ink-2">{answer.intent}</code>
+          <code className="rounded-md bg-rail px-2 py-0.5 font-mono text-[11px] text-ink-2">{answer.intent}</code>
           {params.map(([key, value]) => (
-            <code key={key} className="rounded-md bg-[#F1F1F1] px-2 py-0.5 font-mono text-[11px] text-ink-muted">{key}={String(value)}</code>
+            <code key={key} className="rounded-md bg-rail px-2 py-0.5 font-mono text-[11px] text-ink-muted">{key}={String(value)}</code>
           ))}
           <span className="text-[11px] font-semibold text-brand-ink">· {answer.rows.length} {answer.rows.length === 1 ? "row" : "rows"}</span>
         </div>
@@ -142,12 +142,12 @@ function AnswerBlock({ answer, compact, onAsk }: { answer: AssistantAnswer; comp
         <div className="card overflow-hidden">
           <div className="max-h-72 overflow-auto">
             <table className="w-full border-collapse text-left">
-              <thead className="sticky top-0 bg-[#FAFAFA]">
+              <thead className="sticky top-0 bg-[#F7FAFC]">
                 <tr>{answer.columns.map((col) => <th key={col} className="whitespace-nowrap px-3 py-2 text-[11.5px] font-semibold text-ink-muted">{col}</th>)}</tr>
               </thead>
               <tbody>
                 {answer.rows.slice(0, compact ? 8 : 50).map((row, i) => (
-                  <tr key={i} className="border-t border-[#F1F1F1]">
+                  <tr key={i} className="border-t border-line">
                     {answer.columns.map((col) => (
                       <td key={col} className="num whitespace-nowrap px-3 py-2 text-[12.5px] text-ink-2">
                         {col === "Order" && orderColumn ? <Link href={"/manager/reviews/" + row[col]} className="font-semibold text-ink hover:underline">{row[col]}</Link> : row[col]}
@@ -168,7 +168,7 @@ function AnswerBlock({ answer, compact, onAsk }: { answer: AssistantAnswer; comp
       {!answer.supported && (
         <div className="flex flex-wrap gap-1.5">
           {SUGGESTIONS.slice(0, 3).map((item) => (
-            <button key={item} onClick={() => onAsk(item)} className="rounded-full bg-white px-2.5 py-1 text-[12px] text-ink-2 shadow-[0_0_0_1px_#D9D9D9] hover:shadow-[0_0_0_1px_#1A1A1A]">{item}</button>
+            <button key={item} onClick={() => onAsk(item)} className="rounded-full bg-white px-2.5 py-1 text-[12px] text-ink-2 shadow-[0_0_0_1px_#C5D2DA] hover:shadow-[0_0_0_1px_#2E7BAA]">{item}</button>
           ))}
         </div>
       )}

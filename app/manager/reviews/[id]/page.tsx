@@ -85,10 +85,10 @@ function ReviewDetail() {
       <div className="flex flex-wrap items-start gap-4">
         <div className="flex min-w-0 flex-[999_1_520px] flex-col gap-4">
           {completion && (
-            <section className={cx("flex flex-col gap-3 rounded-xl p-4", flags.length ? "bg-ai-tint shadow-[0_0_0_1px_#E2D5FA]" : "bg-brand-tint shadow-[0_0_0_1px_#BFE6D3]")}>
+            <section className={cx("flex flex-col gap-3 rounded-xl p-4", flags.length ? "bg-ai-tint shadow-[0_0_0_1px_#E2D5FA]" : "bg-ok-tint shadow-[0_0_0_1px_#BDE5D2]")}>
               <div className="flex items-center gap-2">
-                {flags.length ? <Sparkles className="h-[18px] w-[18px] text-ai" /> : <ShieldCheck className="h-[18px] w-[18px] text-brand" />}
-                <h2 className={cx("text-sm font-semibold", flags.length ? "text-ai-ink" : "text-brand-ink")}>Supervisor check · {flags.length ? flags.length + (flags.length === 1 ? " flag" : " flags") : "no issues found"}</h2>
+                {flags.length ? <Sparkles className="h-[18px] w-[18px] text-ai" /> : <ShieldCheck className="h-[18px] w-[18px] text-ok" />}
+                <h2 className={cx("text-sm font-semibold", flags.length ? "text-ai-ink" : "text-ok")}>Supervisor check · {flags.length ? flags.length + (flags.length === 1 ? " flag" : " flags") : "no issues found"}</h2>
                 <span className="ml-auto text-xs text-ink-muted">Rules + AI review of this job</span>
               </div>
               {flags.map((flag) => (

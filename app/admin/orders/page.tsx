@@ -80,7 +80,7 @@ function OrdersView() {
 
       {data && (
         <>
-          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-[#F1F1F1] md:grid-cols-4 [&>*]:bg-white">
+          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-rail md:grid-cols-4 [&>*]:bg-white">
             <Stat label="Orders created today" value={createdToday} />
             <Stat label="Unassigned" value={unassigned.length} tone={unassigned.length ? "danger" : undefined} note={oldestNew ? "oldest " + timeAgo(oldestNew).replace(" ago", "") : undefined} />
             <Stat label="In the field now" value={inField} note={"of " + technicianOptions.length + " technicians"} />
@@ -104,10 +104,10 @@ function OrdersView() {
                     role="tab"
                     aria-selected={tab === status}
                     onClick={() => setTab(status)}
-                    className={cx("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-3 text-[13px] transition", tab === status ? "bg-[#E3E3E3] font-semibold text-ink" : "font-medium text-ink-muted hover:bg-[#F1F1F1]")}
+                    className={cx("inline-flex h-[30px] items-center gap-1.5 rounded-lg px-3 text-[13px] transition", tab === status ? "bg-rail font-semibold text-ink" : "font-medium text-ink-muted hover:bg-rail")}
                   >
                     {status}
-                    <span className={cx("num rounded-md px-1.5 text-[11px] font-semibold", tab === status ? "bg-white text-ink-muted" : "bg-[#F1F1F1] text-ink-muted")}>{counts[status] ?? 0}</span>
+                    <span className={cx("num rounded-md px-1.5 text-[11px] font-semibold", tab === status ? "bg-white text-ink-muted" : "bg-rail text-ink-muted")}>{counts[status] ?? 0}</span>
                   </button>
                 ))}
               </div>
@@ -134,7 +134,7 @@ function OrdersView() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[860px] border-collapse text-left">
                   <thead>
-                    <tr className="bg-[#F7F7F7] text-xs font-medium text-ink-muted">
+                    <tr className="bg-canvas text-xs font-medium text-ink-muted">
                       {["Order", "Customer", "Service", "Technician", "Scheduled", "Quote", "Status"].map((head) => (
                         <th key={head} className={cx("whitespace-nowrap border-b border-line px-3 py-2.5 font-medium", head === "Quote" && "text-right", head === "Order" && "pl-4")}>{head}</th>
                       ))}
@@ -142,7 +142,7 @@ function OrdersView() {
                   </thead>
                   <tbody>
                     {pageRows.map((order) => (
-                      <tr key={order.id} className="group border-b border-[#F1F1F1] text-[13px] hover:bg-[#FAFAFA]">
+                      <tr key={order.id} className="group border-b border-line text-[13px] hover:bg-[#F7FAFC]">
                         <td className="whitespace-nowrap py-2.5 pl-4 pr-3">
                           <Link href={"/admin/orders/" + order.orderNo} className="num font-semibold text-ink group-hover:underline">{order.orderNo}</Link>
                           <div className="text-xs text-ink-faint">{timeAgo(order.createdAt)}</div>
