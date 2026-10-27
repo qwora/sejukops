@@ -27,7 +27,7 @@ export const seedOrders: ServiceOrder[] = [
     problemDescription: "Air conditioner is not cooling properly.",
     serviceType: "Wall-mounted repair",
     quotedPrice: 320,
-    assignedTechnician: "John",
+    assignedTechnician: "Ali",
     branch: "Kuala Lumpur",
     status: "Assigned",
     adminNotes: "Customer prefers a call before arrival.",

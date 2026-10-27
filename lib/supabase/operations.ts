@@ -176,6 +176,7 @@ export async function saveCompletionToDb(input: {
   remarks: string;
   paymentAmount: number;
   paymentMethod: string;
+  files: File[];
 }) {
   const [{ data: order, error: orderError }, technicians] = await Promise.all([
     supabase.from("orders").select("id").eq("order_no", input.orderNo).single(),
@@ -185,7 +186,7 @@ export async function saveCompletionToDb(input: {
   if (orderError) throw orderError;
 
   const technician = technicians.find((item) => item.name === input.technicianName);
-  const { error: completionError } = await supabase.from("service_completions").upsert({
+  const { data: completion, error: completionError } = await supabase.from("service_completions").upsert({
     order_id: order.id,
     technician_id: technician?.id ?? null,
     work_done: input.workDone,
@@ -195,9 +196,29 @@ export async function saveCompletionToDb(input: {
     payment_amount: input.paymentAmount,
     payment_method: input.paymentMethod,
     completed_at: new Date().toISOString()
-  }, { onConflict: "order_id" });
+  }, { onConflict: "order_id" }).select("id").single();
 
   if (completionError) throw completionError;
+
+  for (const file of input.files.slice(0, 6)) {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
+    const filePath = input.orderNo + "/" + Date.now() + "-" + safeName;
+    const { error: uploadError } = await supabase.storage
+      .from("service-evidence")
+      .upload(filePath, file, { contentType: file.type || "application/octet-stream", upsert: false });
+
+    if (uploadError) throw uploadError;
+
+    const { error: fileRowError } = await supabase.from("service_files").insert({
+      order_id: order.id,
+      completion_id: completion.id,
+      file_path: filePath,
+      file_name: file.name,
+      file_type: file.type || "application/octet-stream"
+    });
+
+    if (fileRowError) throw fileRowError;
+  }
 
   const { error: updateError } = await supabase
     .from("orders")
