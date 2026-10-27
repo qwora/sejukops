@@ -16,10 +16,11 @@ const navItems = [
 
 export function PortalShell({ children, role, active }: PortalShellProps) {
   const items = navItems.filter((item) => item.roles.includes(role));
+  const isTechnician = role === "Technician";
 
   return (
-    <div className="portal-shell flex">
-      <aside className="portal-sidebar flex min-h-screen flex-col px-3 py-5 md:px-4">
+    <div className="portal-shell flex min-h-screen">
+      <aside className={(isTechnician ? "hidden md:flex " : "flex ") + "portal-sidebar min-h-screen flex-col px-3 py-5 md:px-4"}>
         <Link href="/" className="mb-10 flex items-center gap-3 px-2">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#dff7eb] font-bold text-[#10233f]">S</span>
           <span className="brand-label font-semibold">Sejuk Sejuk</span>
@@ -42,7 +43,18 @@ export function PortalShell({ children, role, active }: PortalShellProps) {
         </div>
       </aside>
 
-      <main className="portal-content flex-1">{children}</main>
+      <main className="portal-content min-w-0 flex-1">
+        {isTechnician && (
+          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4 md:hidden">
+            <Link href="/technician/jobs" className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#dff7eb] font-bold text-[#10233f]">S</span>
+              <span className="text-sm font-semibold text-ink">My jobs</span>
+            </Link>
+            <span className="rounded-full bg-mint px-3 py-1.5 text-xs font-semibold text-emerald-800">Technician</span>
+          </header>
+        )}
+        {children}
+      </main>
     </div>
   );
 }
