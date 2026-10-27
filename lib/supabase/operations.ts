@@ -230,7 +230,7 @@ export async function saveCompletionToDb(input: {
 
 export async function listDbCompletions(): Promise<ServiceCompletion[]> {
   const [{ data: rows, error }, technicians] = await Promise.all([
-    supabase.from("service_completions").select("*, orders(order_no)"),
+    supabase.from("service_completions").select("*, orders(order_no), service_files(file_name)"),
     getTechnicianRows()
   ]);
 
@@ -247,7 +247,7 @@ export async function listDbCompletions(): Promise<ServiceCompletion[]> {
     remarks: row.remarks ?? "",
     paymentAmount: Number(row.payment_amount ?? 0),
     paymentMethod: row.payment_method ?? "Not recorded",
-    fileNames: [],
+    fileNames: (row.service_files ?? []).map((file: { file_name: string }) => file.file_name),
     completedAt: row.completed_at ?? row.created_at
   }));
 }

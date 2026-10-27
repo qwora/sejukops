@@ -12,7 +12,12 @@ export default function TechnicianJobPage() {
   const params = useParams<{ id: string }>();
   const [order, setOrder] = useState<ServiceOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    setSuccess(window.location.search.includes("completed=1"));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -31,6 +36,8 @@ export default function TechnicianJobPage() {
     return () => { active = false; };
   }, [params.id]);
 
+  const completed = success || order?.status === "Job Done" || order?.status === "Reviewed" || order?.status === "Closed";
+
   return (
     <PortalShell role="Technician" active="My jobs">
       <main className="mx-auto max-w-xl px-5 py-8">
@@ -46,11 +53,29 @@ export default function TechnicianJobPage() {
               <p className="mt-1 text-white/65">{order.customerName}</p>
               <p className="mt-5 text-sm leading-6 text-white/75">{order.address}</p>
             </header>
+
+            {success && (
+              <div role="status" className="mt-5 rounded-2xl bg-mint px-5 py-4 text-sm font-semibold text-emerald-900">
+                Job marked done successfully. The manager can now review this service record.
+              </div>
+            )}
+
             <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Job completion</p>
-              <h2 className="mt-2 text-xl font-semibold text-ink">Record what happened on site</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">Final amount is calculated from the quoted price and any extra charges.</p>
-              <div className="mt-6"><CompletionForm order={order} /></div>
+              {completed ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Service record saved</p>
+                  <h2 className="mt-2 text-xl font-semibold text-ink">This job is awaiting review</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">Your work details and evidence are stored. You can return to your job list.</p>
+                  <Link href="/technician/jobs" className="mt-6 block w-full rounded-2xl bg-ink px-4 py-4 text-center text-sm font-semibold text-white">Back to my jobs</Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Job completion</p>
+                  <h2 className="mt-2 text-xl font-semibold text-ink">Record what happened on site</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">Final amount is calculated from the quoted price and any extra charges.</p>
+                  <div className="mt-6"><CompletionForm order={order} /></div>
+                </>
+              )}
             </section>
           </>
         )}
