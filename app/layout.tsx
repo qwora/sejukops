@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "@/lib/session";
 import { BRAND } from "@/lib/brand";
+import { ServiceWorkerRegister } from "@/components/pwa/install-prompt";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className={inter.variable}>
       <body className="font-sans">
         <SessionProvider>{children}</SessionProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

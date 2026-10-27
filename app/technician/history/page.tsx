@@ -36,33 +36,33 @@ function HistoryView() {
   return (
     <div>
       <header className="bg-white px-5 pb-4 pt-6">
-        <h1 className="text-[22px] font-extrabold tracking-tight text-ink">History</h1>
+        <h1 className="text-[28px] font-extralight tracking-tight text-ink">History</h1>
         <p className="num mt-1 text-[13px] text-ink-muted">{data ? `${data.completions.length} jobs · ${money(total, 0)} total` : "Loading…"}</p>
       </header>
       <div className="flex flex-col gap-4 px-4 pt-4">
         {error && <ErrorBanner message={error} onRetry={() => reload()} />}
         {loading && !data && <><Skeleton className="h-5 w-24" /><Skeleton className="h-36 w-full rounded-2xl" /></>}
         {data && data.completions.length === 0 && (
-          <div className="rounded-2xl bg-white"><EmptyState icon={<History className="h-5 w-5" />} title="No completed jobs yet" body="Jobs you mark done show up here, grouped by day." /></div>
+          <div className="rounded-3xl border border-line bg-white"><EmptyState icon={<History className="h-5 w-5" />} title="No completed jobs yet" body="Jobs you mark done show up here, grouped by day." /></div>
         )}
         {[...groups.entries()].map(([key, items]) => (
           <section key={key}>
-            <h2 className="mb-2 flex justify-between px-1 text-[13px] font-bold text-ink-muted">
+            <h2 className="mb-2 flex justify-between px-1 text-[13px] font-medium text-ink-muted">
               <span>{formatDate(items[0].completedAt, { weekday: "long", day: "numeric", month: "short" })}</span>
               <span className="num">{money(items.reduce((s, c) => s + c.finalAmount, 0), 0)}</span>
             </h2>
-            <div className="rounded-2xl bg-white px-4">
+            <div className="rounded-3xl border border-line bg-white px-4">
               {items.map((item) => {
                 const order = data?.orders.find((o) => o.orderNo === item.orderNo);
                 return (
                   <Link key={item.id} href={"/technician/jobs/" + item.orderNo} className="flex min-h-[56px] items-center gap-3 border-b border-line py-3 last:border-0">
-                    <span className="num w-[44px] text-[13px] font-bold text-ink-muted">{formatTime(item.completedAt)}</span>
+                    <span className="num w-[44px] text-[13px] font-medium text-ink-muted">{formatTime(item.completedAt)}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-ink">{order?.serviceType ?? item.orderNo}</span>
                       <span className="block truncate text-xs text-ink-faint">{item.orderNo} · {order?.customerName}</span>
                     </span>
                     <span className="flex flex-col items-end gap-1">
-                      <span className="num text-[13px] font-bold text-ink">{money(item.finalAmount, 0)}</span>
+                      <span className="num text-[13px] font-medium text-ink">{money(item.finalAmount, 0)}</span>
                       {order && <JobStateTag status={order.status} />}
                     </span>
                   </Link>

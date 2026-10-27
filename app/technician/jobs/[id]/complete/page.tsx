@@ -135,24 +135,24 @@ function CompleteForm() {
     }
   }
 
-  const section = "rounded-2xl bg-white px-4 py-3.5";
+  const section = "rounded-3xl border border-line bg-white px-4 py-3.5";
   const chipBase = "h-9 rounded-full px-3.5 text-[13px] font-semibold transition";
 
   return (
-    <div className="pb-[170px]">
+    <div className="flex min-h-screen flex-col lg:min-h-[calc(100vh-48px)]">
       <div className="sticky top-0 z-10 flex h-[60px] items-center gap-2 border-b border-line bg-white px-2">
         <Link href={"/technician/jobs/" + order.orderNo} aria-label="Back" className="flex h-11 w-11 items-center justify-center text-ink"><ChevronLeft className="h-5 w-5" /></Link>
         <div className="flex-1">
-          <h1 className="text-[17px] font-extrabold text-ink">Complete job</h1>
+          <h1 className="text-xl font-light tracking-tight text-ink">Complete job</h1>
           <p className="num text-xs text-ink-muted">{order.orderNo} · {session.technicianName ?? order.assignedTechnician} · {formatDateTime(new Date().toISOString())}</p>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2.5 p-3">
+      <div className="flex flex-1 flex-col gap-2.5 p-3">
         {formError && <ErrorBanner message={formError} />}
 
         <section className={section}>
-          <h2 className="text-sm font-bold text-ink">Work done</h2>
+          <h2 className="text-[15px] font-normal text-ink">Work done</h2>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {WORK_CHIPS.map((chip) => (
               <button key={chip} type="button" aria-pressed={chips.includes(chip)} onClick={() => toggleChip(chip)} className={cx(chipBase, chips.includes(chip) ? "bg-brand-tint text-brand-ink shadow-[inset_0_0_0_1.5px_#2E7BAA]" : "bg-rail text-ink-2")}>
@@ -168,12 +168,12 @@ function CompleteForm() {
 
         <section className={section}>
           <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-bold text-ink">Photos, video &amp; PDF</h2>
+            <h2 className="text-[15px] font-normal text-ink">Photos, video &amp; PDF</h2>
             <span className="num text-xs font-semibold text-ink-muted">{files.length} / {MAX_EVIDENCE_FILES}</span>
           </div>
           <div className="mt-2.5 grid grid-cols-4 gap-2">
             {files.map((item) => (
-              <div key={item.id} className="relative aspect-square overflow-hidden rounded-xl bg-[#E1E8ED]">
+              <div key={item.id} className="relative aspect-square overflow-hidden rounded-2xl bg-[#E1E8ED]">
                 {item.file.type.startsWith("image/") ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={item.url} alt={item.file.name} className="h-full w-full object-cover" />
@@ -186,7 +186,7 @@ function CompleteForm() {
               </div>
             ))}
             {files.length < MAX_EVIDENCE_FILES && (
-              <button type="button" onClick={() => inputRef.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-[11px] font-bold text-brand">
+              <button type="button" onClick={() => inputRef.current?.click()} className="flex aspect-square flex-col items-center justify-center gap-0.5 rounded-2xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-[11px] font-bold text-brand">
                 <Plus className="h-5 w-5" strokeWidth={2.4} />Add
               </button>
             )}
@@ -196,7 +196,7 @@ function CompleteForm() {
         </section>
 
         <section className={section}>
-          <h2 className="text-sm font-bold text-ink">Extra charges</h2>
+          <h2 className="text-[15px] font-normal text-ink">Extra charges</h2>
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {EXTRA_PRESETS.map((preset) => {
               const on = extras.some((e) => e.label === preset.label);
@@ -212,7 +212,7 @@ function CompleteForm() {
               {extras.map((extra) => (
                 <li key={extra.id} className="flex items-center gap-2">
                   <input aria-label="Extra charge name" value={extra.label} onChange={(e) => setExtras((c) => c.map((x) => (x.id === extra.id ? { ...x, label: e.target.value } : x)))} className="m-field h-11 flex-1 text-sm" />
-                  <div className="flex h-11 w-[104px] items-center rounded-xl border border-line bg-white px-2.5 focus-within:border-brand">
+                  <div className="flex h-11 w-[104px] items-center rounded-full border border-line bg-white px-2.5 focus-within:border-brand">
                     <span className="text-xs text-ink-muted">RM</span>
                     <input aria-label="Amount" inputMode="decimal" value={extra.amount} onChange={(e) => setExtras((c) => c.map((x) => (x.id === extra.id ? { ...x, amount: e.target.value.replace(/[^\d.]/g, "") } : x)))} className="num w-full bg-transparent pl-1.5 text-right text-sm font-semibold outline-none" />
                   </div>
@@ -221,16 +221,16 @@ function CompleteForm() {
               ))}
             </ul>
           )}
-          <button type="button" onClick={() => setExtras((c) => [...c, { id: Date.now(), label: "", amount: "" }])} className="mt-2.5 flex h-10 items-center gap-1.5 text-[13px] font-bold text-brand">
+          <button type="button" onClick={() => setExtras((c) => [...c, { id: Date.now(), label: "", amount: "" }])} className="mt-2.5 flex h-10 items-center gap-1.5 text-[13px] font-medium text-brand">
             <Plus className="h-4 w-4" />Add other charge
           </button>
         </section>
 
         <section className={section}>
-          <h2 className="text-sm font-bold text-ink">Payment received</h2>
+          <h2 className="text-[15px] font-normal text-ink">Payment received</h2>
           <div className="mt-2.5 grid grid-cols-3 gap-1.5">
             {PAYMENT.map((method) => (
-              <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={cx("h-11 rounded-xl text-[13px] font-semibold transition", payment === method ? "bg-ink text-white" : "bg-rail text-ink-2")}>
+              <button key={method} type="button" aria-pressed={payment === method} onClick={() => setPayment(method)} className={cx("h-11 rounded-full text-[13px] font-medium transition", payment === method ? "bg-ink text-white" : "bg-rail text-ink-2")}>
                 {method}
               </button>
             ))}
@@ -238,7 +238,7 @@ function CompleteForm() {
           {payment !== "Not paid" && (
             <label className="mt-2.5 flex items-center justify-between gap-3 text-[13px] text-ink-muted">
               Amount received
-              <span className="flex h-11 w-[140px] items-center rounded-xl border border-line bg-white px-3 focus-within:border-brand">
+              <span className="flex h-11 w-[140px] items-center rounded-full border border-line bg-white px-3 focus-within:border-brand">
                 <span className="text-xs">RM</span>
                 <input inputMode="decimal" value={paidAmount ?? finalAmount.toFixed(2)} onChange={(e) => setPaidAmount(e.target.value.replace(/[^\d.]/g, ""))} className="num w-full bg-transparent pl-1.5 text-right text-[15px] font-bold text-ink outline-none" />
               </span>
@@ -247,13 +247,13 @@ function CompleteForm() {
           {payment !== "Not paid" && (
             <div className="mt-3 flex items-center gap-3 border-t border-line pt-3">
               {receipt ? (
-                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-xl bg-[#E1E8ED]">
+                <div className="relative h-14 w-14 flex-none overflow-hidden rounded-2xl bg-[#E1E8ED]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={receipt.url} alt="Payment receipt" className="h-full w-full object-cover" />
                   <button type="button" onClick={() => setReceipt(null)} aria-label="Remove receipt" className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 text-white"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
-                <button type="button" onClick={() => receiptRef.current?.click()} className="flex h-14 w-14 flex-none items-center justify-center rounded-xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-brand" aria-label="Add receipt photo">
+                <button type="button" onClick={() => receiptRef.current?.click()} className="flex h-14 w-14 flex-none items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[#9FC3DA] bg-[#EEF5FA] text-brand" aria-label="Add receipt photo">
                   <Camera className="h-5 w-5" />
                 </button>
               )}
@@ -268,21 +268,21 @@ function CompleteForm() {
 
         <section className={section}>
           <label className="block">
-            <span className="text-sm font-bold text-ink">Remarks <span className="font-normal text-ink-faint">(optional)</span></span>
+            <span className="text-[15px] font-normal text-ink">Remarks <span className="font-normal text-ink-faint">(optional)</span></span>
             <textarea rows={2} value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Anything the manager or customer should know" className="m-field mt-2 resize-none py-2.5 text-[14px]" />
           </label>
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-[440px] flex-col gap-3 rounded-t-[20px] bg-white px-5 pb-6 pt-3.5 shadow-sheet md:absolute md:rounded-b-[28px]">
+      <div className="sticky bottom-0 z-20 flex flex-col gap-3 rounded-t-[28px] bg-white px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-3.5 shadow-sheet">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-xs text-ink-muted">Final amount</p>
             <p className="num text-xs text-ink-faint">Quoted {money(order.quotedPrice, 0)}{extraTotal > 0 ? " + extras " + money(extraTotal, 0) : ""}</p>
           </div>
-          <p className="num text-[28px] font-extrabold tracking-tight text-ink">{money(finalAmount)}</p>
+          <p className="num text-[32px] font-extralight tracking-tight text-ink">{money(finalAmount)}</p>
         </div>
-        <button onClick={submit} disabled={!!stage} className="flex h-14 items-center justify-center rounded-2xl bg-brand text-base font-extrabold text-white shadow-cta transition active:scale-[.99] disabled:opacity-70">
+        <button onClick={submit} disabled={!!stage} className="flex h-14 items-center justify-center rounded-full bg-brand text-base font-medium text-white shadow-cta transition active:scale-[.99] disabled:opacity-70">
           {stage === "uploading" ? `Uploading ${files.length} file${files.length === 1 ? "" : "s"}…` : stage === "saving" ? "Saving…" : "Mark job done"}
         </button>
       </div>

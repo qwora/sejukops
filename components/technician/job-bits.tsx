@@ -17,31 +17,31 @@ export const JOB_STATE: Record<string, { label: string; className: string; dot: 
 
 export function JobStateTag({ status }: { status: ServiceOrder["status"] }) {
   const state = JOB_STATE[status];
-  return <span className={cx("rounded-md px-2 py-0.5 text-[11px] font-bold tracking-wide", state.className)}>{state.label}</span>;
+  return <span className={cx("rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide", state.className)}>{state.label}</span>;
 }
 
 export function NextJobCard({ job, returned }: { job: ServiceOrder; returned?: boolean }) {
   const inProgress = job.status === "In Progress";
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-[0_1px_2px_rgba(0,0,0,.05)]">
+    <div className="rounded-[28px] border border-line bg-white p-[18px]">
       <Link href={"/technician/jobs/" + job.orderNo} className="block">
         <div className="flex items-center gap-2">
           <JobStateTag status={job.status} />
           {returned && <span className="rounded-md bg-danger-tint px-2 py-0.5 text-[11px] font-bold text-danger">RETURNED</span>}
           <span className="num text-xs font-semibold text-ink-muted">{job.orderNo}</span>
-          <span className="num ml-auto text-[15px] font-extrabold text-ink">{job.scheduledAt ? formatTime(job.scheduledAt) : "—"}</span>
+          <span className="num ml-auto text-lg font-light text-ink">{job.scheduledAt ? formatTime(job.scheduledAt) : "—"}</span>
         </div>
-        <div className="mt-2.5 text-[17px] font-bold leading-snug text-ink">{job.serviceType}</div>
+        <div className="mt-2.5 text-xl font-light leading-snug tracking-tight text-ink">{job.serviceType}</div>
         <div className="mt-2 flex gap-2 text-[13px] leading-snug text-ink-2">
           <MapPin className="mt-0.5 h-4 w-4 flex-none text-brand" aria-hidden />
           <span><span className="font-semibold">{job.customerName}</span> · {job.address}</span>
         </div>
       </Link>
       <div className="mt-3.5 flex gap-2">
-        <Link href={"/technician/jobs/" + job.orderNo} className="flex h-12 flex-1 items-center justify-center rounded-xl bg-brand text-[15px] font-bold text-white active:scale-[.99]">
+        <Link href={"/technician/jobs/" + job.orderNo} className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-brand text-[15px] font-medium text-white shadow-cta active:scale-[.99]">
           {inProgress ? "Continue job" : "Open job"}
         </Link>
-        <a href={"tel:+" + job.customerPhone} aria-label={"Call " + job.customerName} className="flex h-12 w-12 items-center justify-center rounded-xl bg-rail text-ink">
+        <a href={"tel:+" + job.customerPhone} aria-label={"Call " + job.customerName} className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-rail text-ink">
           <Phone className="h-[18px] w-[18px]" />
         </a>
       </div>
