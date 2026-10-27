@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { OperationsAssistant } from "@/components/operations-assistant";
+import { SignOutButton } from "@/components/sign-out-button";
 
 type PortalShellProps = {
   children: ReactNode;
@@ -49,6 +50,7 @@ export function PortalShell({ children, role, active }: PortalShellProps) {
 
         <div className="sidebar-footer mt-auto border-t border-white/10 px-2 pt-5 text-xs text-white/45">
           {role} dashboard · Assessment workspace
+          <SignOutButton />
         </div>
       </aside>
 

@@ -101,8 +101,8 @@ Recommended route structure:
 - Supabase Storage
 - Vercel deployment
 - Serverless route handlers for controlled backend operations
-- Mock role login initially
-- Supabase Auth only if time allows
+- Supabase Auth email/password with role profiles
+- Mock role login retained as a deliberate preview fallback
 - AI provider connected through a server-side endpoint
 
 Next.js is used because it is a React framework and provides a practical structure for serverless operations, secure environment variables, route handlers and Vercel deployment. This is a deliberate implementation choice, not a departure from the requested React stack.
@@ -281,7 +281,9 @@ Completion criteria:
 - No secrets are committed
 - The project can be run locally with documented commands
 
-### Phase 1 — Public landing page and application shell
+### Phase 1 — Public landing page and application shell (implemented)
+
+Real Supabase Auth is now available through `/login` and `/signup`. New accounts store a role in Auth metadata and create a matching `profiles` row when a session is available. Demo role access remains available for reviewers who do not want to create an account.
 
 Deliverables:
 

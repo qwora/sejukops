@@ -80,3 +80,15 @@ Reason:
 The workflow now exposes explicit transition functions for `Assigned → In Progress`, `Job Done → Reviewed`, `Reviewed → Closed`, and review return. The UI calls these functions instead of changing status locally.
 
 The operations assistant uses `POST /api/operations/query`. The route classifies a small supported query set, retrieves only the matching Supabase records, and returns a deterministic answer. If `OPENAI_API_KEY` is configured server-side, the same structured result may be passed to the model for wording only. The model never receives unrestricted database access, and the deterministic response remains the fallback when no AI key is configured.
+
+
+## ADR-008: Real Supabase Auth with demo fallback
+
+Decision: Add Supabase email/password authentication and role profiles without removing demo mode.
+
+Reason:
+
+- Real Auth demonstrates production-oriented account handling.
+- Profiles provide a stable place for role and future branch or technician mapping.
+- Demo mode keeps the assessment preview easy to access before reviewer accounts exist.
+- The Auth client uses only the public Supabase anon key; no service-role key is exposed in the browser.

@@ -44,7 +44,7 @@ The technician portal is inspired by Grab's rider workflow:
 - Serverless route handlers
 - AI provider through controlled backend queries
 
-The assessment permits a mock role selector. Supabase Auth may be added later if it improves the demonstration without delaying the workflow.
+The assessment permits a mock role selector. Real Supabase Auth is now available for email/password accounts, with the demo selector retained for assessment previews.
 
 ## Current implementation
 
@@ -56,6 +56,7 @@ Current implementation:
 - Phase 4: manager review queue and manual WhatsApp deep links
 - Phase 5: data-backed weekly KPI dashboard and technician leaderboard
 - Phase 6: controlled operations query endpoint and manager Sidekick panel
+- Real Supabase Auth sign-in, signup and role profiles
 
 See plan.md for the complete implementation plan.
 
