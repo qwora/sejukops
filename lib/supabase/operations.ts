@@ -209,7 +209,7 @@ export async function saveCompletionToDb(input: {
 
 export async function listDbCompletions(): Promise<ServiceCompletion[]> {
   const [{ data: rows, error }, technicians] = await Promise.all([
-    supabase.from("service_completions").select("*"),
+    supabase.from("service_completions").select("*, orders(order_no)"),
     getTechnicianRows()
   ]);
 
@@ -218,7 +218,7 @@ export async function listDbCompletions(): Promise<ServiceCompletion[]> {
   const technicianById = new Map(technicians.map((item) => [item.id, item]));
   return (rows ?? []).map((row) => ({
     id: row.id,
-    orderNo: "",
+    orderNo: row.orders?.order_no ?? "",
     technicianName: technicianById.get(row.technician_id)?.name ?? "Technician",
     workDone: row.work_done ?? "",
     extraCharges: Number(row.extra_charges ?? 0),
