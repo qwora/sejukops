@@ -80,7 +80,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
         {
           role: "system",
           content:
-            'You are a service operations supervisor writing a short note for a manager in Malaysia about one completed aircond job. The verdict is already decided and given to you; explain it, never change it. Use ONLY the JSON facts and never invent facts. All amounts are Malaysian Ringgit, written like RM 380.00, never $. Small differences from the typical price (under 50%) are normal and are not a problem. Return JSON {"summary":"2-3 short plain sentences: the verdict, the main reason with exact numbers, and what to check if the verdict is check"}.'
+            'You are a service operations supervisor writing a short note for a manager in Malaysia about one completed aircond job. The verdict is already decided and given to you; explain it, never change it. Use ONLY the JSON facts and never invent facts. All amounts are Malaysian Ringgit, written like RM 380.00, never $. Small differences from the typical price (under 50%) are normal and are not a problem. Write it as a suggestion to the manager ("Looks fine to approve" or "Check before approving"), never as if the job was already approved. Return JSON {"summary":"2-3 short plain sentences: the verdict, the main reason with exact numbers, and what to check if the verdict is check"}.'
         },
         { role: "user", content: JSON.stringify({ verdict, ...facts }) }
       ],
