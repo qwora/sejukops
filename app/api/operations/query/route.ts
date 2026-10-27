@@ -1,101 +1,111 @@
 import { NextResponse } from "next/server";
-import { ensureDemoData, listDbCompletions, listOrders } from "@/lib/supabase/operations";
+import { resolveActor } from "@/lib/server/actor";
+import { serverClient } from "@/lib/server/db";
+import { chat, gatewayToken } from "@/lib/server/ai/gateway";
+import { classifyWithRules, INTENT_GUIDE, sanitizeIntent, type Intent } from "@/lib/server/ai/intents";
+import { runIntent } from "@/lib/server/ai/queries";
+import { dayKey } from "@/lib/format";
 
 export const runtime = "nodejs";
 
-type QueryResult = { answer: string; supported: boolean; queryType: string; data?: unknown };
+const UNSUPPORTED =
+  "I can only answer questions about Sejuk Sejuk service records: completed jobs, technicians, revenue, the review queue, unassigned orders, workload and flagged jobs. Try one of the suggested questions.";
 
-function dayKey(date: Date) {
-  return date.toLocaleDateString("en-CA");
-}
-
-function startOfDay(date = new Date()) {
-  const value = new Date(date);
-  value.setHours(0, 0, 0, 0);
-  return value;
-}
-
-function startOfWeek(date = new Date(), offset = 0) {
-  const value = startOfDay(date);
-  const day = value.getDay();
-  value.setDate(value.getDate() - (day === 0 ? 6 : day - 1) + offset * 7);
-  return value;
-}
-
-function formatWithRecords(question: string, answer: string, records: unknown[]) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) return Promise.resolve(null);
-  return fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: "Bearer " + apiKey },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-      temperature: 0.2,
-      messages: [
-        { role: "system", content: "Format answers using only the supplied operational records. Do not invent facts, names or numbers. Keep the response concise and mention when no matching records exist." },
-        { role: "user", content: JSON.stringify({ question, deterministicAnswer: answer, records }) }
-      ]
-    })
-  }).then(async (response) => {
-    if (!response.ok) return null;
-    const body = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-    return body.choices?.[0]?.message?.content?.trim() || null;
-  }).catch(() => null);
-}
-
+/**
+ * Operations query window.
+ * 1. Interpret: AI picks one intent from a fixed list (rules as fallback).
+ * 2. Retrieve: a typed, filtered Supabase query for that intent only.
+ * 3. Format: AI words the answer from the returned rows only (deterministic text as fallback).
+ */
 export async function POST(request: Request) {
+  const actor = await resolveActor(request);
+  if (!actor) return NextResponse.json({ error: "Sign in or choose a demo role first." }, { status: 401 });
+  if (actor.role !== "manager" && actor.role !== "admin") {
+    return NextResponse.json({ error: "The operations assistant is for managers and admins." }, { status: 403 });
+  }
+
+  const body = (await request.json().catch(() => ({}))) as { question?: string };
+  const question = (body.question ?? "").trim().slice(0, 300);
+  if (!question) return NextResponse.json({ error: "Ask a question about jobs, technicians or the review queue." }, { status: 400 });
+
+  const token = gatewayToken(request);
+  const trace: string[] = [];
+  let intent: Intent | null = null;
+  let interpretedBy: "ai" | "rules" = "rules";
+  let model: string | null = null;
+
+  if (token) {
+    try {
+      const result = await chat(
+        token,
+        [
+          { role: "system", content: INTENT_GUIDE + `\nToday is ${dayKey(new Date())} (Malaysia time).` },
+          { role: "user", content: question }
+        ],
+        { json: true, maxTokens: 120 }
+      );
+      const json = result.content.match(/\{[\s\S]*\}/)?.[0];
+      intent = sanitizeIntent(json ? JSON.parse(json) : null);
+      if (intent) {
+        interpretedBy = "ai";
+        model = result.model;
+      }
+    } catch (error) {
+      trace.push("AI interpret failed: " + (error instanceof Error ? error.message.slice(0, 120) : "error"));
+    }
+  } else {
+    trace.push("AI Gateway not configured; using rules.");
+  }
+
+  if (!intent) intent = classifyWithRules(question);
+
+  if (intent.type === "unsupported") {
+    return NextResponse.json({ supported: false, answer: UNSUPPORTED, intent: "unsupported", params: {}, columns: [], rows: [], interpretedBy, formattedBy: "rules", model, trace });
+  }
+
   try {
-    const body = await request.json() as { question?: string };
-    const question = body.question?.trim() || "";
-    if (!question) return NextResponse.json({ answer: "Ask a question about jobs, technicians or the review queue.", supported: false, queryType: "empty" }, { status: 400 });
+    const db = serverClient(actor.accessToken);
+    const result = await runIntent(db, intent);
+    let answer = result.answer;
+    let formattedBy: "ai" | "rules" = "rules";
 
-    await ensureDemoData();
-    const [orders, completions] = await Promise.all([listOrders(), listDbCompletions()]);
-    const lower = question.toLowerCase();
-    const technicianMatch = lower.match(/\b(ali|john|bala|yusoff)\b/i);
-    const technician = technicianMatch ? technicianMatch[1].replace(/^./, (letter) => letter.toUpperCase()) : "";
-    const currentWeek = startOfWeek();
-    const previousWeek = startOfWeek(new Date(), -1);
-    const nextWeek = startOfWeek(new Date(), 1);
-    let type = "unsupported";
-    let answer = "";
-    let records: unknown[] = [];
-
-    if (/waiting|awaiting|needs? review|job done/.test(lower)) {
-      type = "awaiting_review";
-      const matches = orders.filter((order) => order.status === "Job Done");
-      records = matches.map((order) => ({ orderNo: order.orderNo, service: order.serviceType, technician: order.assignedTechnician || "Unknown" }));
-      answer = matches.length ? matches.map((order) => order.orderNo + " – " + order.serviceType + " (" + (order.assignedTechnician || "unassigned") + ")").join("\n") : "No jobs are currently waiting for manager review.";
-      if (matches.length) answer = matches.length + " job" + (matches.length === 1 ? " is" : "s are") + " waiting for manager review:\n" + answer;
-    } else if (/most|top|highest/.test(lower) && /technician|jobs?/.test(lower)) {
-      type = "top_technician_this_week";
-      const thisWeek = completions.filter((item) => new Date(item.completedAt) >= currentWeek && new Date(item.completedAt) < nextWeek);
-      const counts = new Map<string, number>();
-      thisWeek.forEach((item) => counts.set(item.technicianName, (counts.get(item.technicianName) || 0) + 1));
-      const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-      records = ranked.map(([name, count]) => ({ technician: name, jobsCompleted: count }));
-      answer = ranked.length ? ranked[0][0] + " completed the most jobs this week with " + ranked[0][1] + " job" + (ranked[0][1] === 1 ? "" : "s") + "." : "No completed jobs are recorded this week.";
-    } else if (/how many|number of|count/.test(lower) && /today/.test(lower)) {
-      type = "completed_today";
-      const today = dayKey(new Date());
-      const matches = completions.filter((item) => dayKey(new Date(item.completedAt)) === today);
-      records = matches.map((item) => ({ orderNo: item.orderNo, technician: item.technicianName, service: item.workDone }));
-      answer = matches.length + " job" + (matches.length === 1 ? " was" : "s were") + " completed today.";
-    } else if (technician && /complete|finish|job/.test(lower)) {
-      type = lower.includes("last week") ? "technician_last_week" : "technician_this_week";
-      const from = type === "technician_last_week" ? previousWeek : currentWeek;
-      const to = type === "technician_last_week" ? currentWeek : nextWeek;
-      const matches = completions.filter((item) => item.technicianName.toLowerCase() === technician.toLowerCase() && new Date(item.completedAt) >= from && new Date(item.completedAt) < to);
-      records = matches.map((item) => ({ orderNo: item.orderNo, service: item.workDone, completedAt: item.completedAt }));
-      answer = matches.length ? technician + " completed " + matches.length + " job" + (matches.length === 1 ? "" : "s") + ":\n" + matches.map((item) => item.orderNo + " – " + item.workDone).join("\n") : technician + " has no completed jobs in that period.";
-    } else {
-      return NextResponse.json({ answer: "I can answer supported questions about completed jobs, technicians and the review queue. Try asking how many jobs were completed today, who completed the most jobs this week, or which jobs are waiting for review.", supported: false, queryType: type });
+    if (token) {
+      try {
+        const formatted = await chat(
+          token,
+          [
+            {
+              role: "system",
+              content:
+                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number exactly as given. Use plain sentences, at most 4 lines, and list order numbers on their own lines when there are 5 or fewer. If there are no rows, say so plainly."
+            },
+            { role: "user", content: JSON.stringify({ question, intent, deterministicAnswer: result.answer, rows: result.rows.slice(0, 20) }) }
+          ],
+          { maxTokens: 300 }
+        );
+        answer = formatted.content;
+        formattedBy = "ai";
+        model = model ?? formatted.model;
+      } catch (error) {
+        trace.push("AI format failed: " + (error instanceof Error ? error.message.slice(0, 120) : "error"));
+      }
     }
 
-    const formatted = await formatWithRecords(question, answer, records);
-    const result: QueryResult = { answer: formatted || answer, supported: true, queryType: type, data: records };
-    return NextResponse.json(result);
+    return NextResponse.json({
+      supported: true,
+      answer,
+      intent: intent.type,
+      params: result.params,
+      range: result.range ?? null,
+      columns: result.columns,
+      rows: result.rows,
+      interpretedBy,
+      formattedBy,
+      model,
+      trace
+    });
   } catch (error) {
-    return NextResponse.json({ answer: error instanceof Error ? error.message : "Could not query operational data.", supported: false, queryType: "error" }, { status: 500 });
+    console.error("[operations/query]", error);
+    return NextResponse.json({ error: "Could not query operational data right now." }, { status: 500 });
   }
 }
