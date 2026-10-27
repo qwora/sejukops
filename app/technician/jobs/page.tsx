@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { PortalShell } from "@/components/portal-shell";
 
 const jobs = [
@@ -32,9 +33,12 @@ export default function TechnicianJobsPage() {
                 <p className="text-sm leading-6 text-slate-600">{job.address}</p>
                 <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{job.id}</p>
               </div>
-              <button className={"mt-5 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold " + (index === 0 ? "bg-ink text-white" : "border border-slate-200 text-ink")}>
+              <Link
+                href={"/technician/jobs/" + job.id}
+                className={"mt-5 block w-full rounded-2xl px-4 py-3.5 text-center text-sm font-semibold " + (index === 0 ? "bg-ink text-white" : "border border-slate-200 text-ink")}
+              >
                 {index === 0 ? "Open job" : "View details"}
-              </button>
+              </Link>
             </article>
           ))}
         </div>
