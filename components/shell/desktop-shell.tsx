@@ -116,7 +116,7 @@ function ShellFrame({ children, assistant }: { children: ReactNode; assistant: b
           {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
         <Link href={home} className="flex items-center gap-2.5 lg:w-[224px]">
-          <BrandMark />
+          <BrandMark size={24} className="text-white" />
           <span className="hidden text-[15px] font-bold tracking-tight text-white sm:inline">Sejuk Ops</span>
         </Link>
         <form onSubmit={search} className="hidden max-w-[520px] flex-1 md:block" role="search">

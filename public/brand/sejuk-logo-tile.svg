@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 736 939" width="736" height="939" role="img" aria-label="Sejuk Sejuk logo">
+  <defs>
+    <linearGradient id="g" x1="0.15" y1="0.05" x2="0.85" y2="0.95">
+      <stop offset="0" stop-color="#C3CAD1"/>
+      <stop offset="0.3" stop-color="#C3CAD1"/>
+      <stop offset="0.56" stop-color="#2E7BAA"/>
+      <stop offset="1" stop-color="#01202F"/>
+    </linearGradient>
+  </defs>
+  <rect width="736" height="939" fill="url(#g)"/>
+  <g transform="translate(284 382)" fill="#FFFFFF">
+    <path d="M0 0H44V52.6A116 116 0 0 1 126 11.2V57.4A70 70 0 0 0 63 127H0Z"/>
+    <path d="M53 175A114 114 0 0 1 167 61V105A70 70 0 0 0 114.2 129H167V175Z"/>
+  </g>
+</svg>
