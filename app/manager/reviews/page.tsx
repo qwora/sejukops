@@ -1,12 +1,41 @@
-import { PortalShell } from "@/components/portal-shell";
+"use client";
 
-const reviewJobs = [
-  { id: "ORDER1237", customer: "Nadia Yusuf", service: "Installation", technician: "Yusoff", final: "RM920", quote: "RM850", files: 4 },
-  { id: "ORDER1229", customer: "Farid Ismail", service: "Deep cleaning", technician: "Ali", final: "RM180", quote: "RM180", files: 3 },
-  { id: "ORDER1224", customer: "Mei Ling", service: "Repair", technician: "John", final: "RM450", quote: "RM350", files: 1 }
-];
+import { useEffect, useMemo, useState } from "react";
+import { PortalShell } from "@/components/portal-shell";
+import { readDemoOrders, saveDemoOrders } from "@/lib/demo-orders";
+import { readCompletions, type ServiceCompletion } from "@/lib/service-completion";
+import type { ServiceOrder } from "@/lib/order-types";
 
 export default function ManagerReviewsPage() {
+  const [orders, setOrders] = useState<ServiceOrder[]>([]);
+  const [completions, setCompletions] = useState<ServiceCompletion[]>([]);
+  const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    setOrders(readDemoOrders());
+    setCompletions(readCompletions());
+  }, []);
+
+  const reviewJobs = useMemo(
+    () => orders.filter((order) => order.status === "Job Done"),
+    [orders]
+  );
+
+  function completionFor(orderNo: string) {
+    return completions.find((item) => item.orderNo === orderNo);
+  }
+
+  function updateReview(orderNo: string, status: "Reviewed" | "In Progress") {
+    const updated = orders.map((order) =>
+      order.orderNo === orderNo
+        ? { ...order, status, updatedAt: new Date().toISOString() }
+        : order
+    );
+    saveDemoOrders(updated);
+    setOrders(updated);
+    setNotice(status === "Reviewed" ? orderNo + " approved and ready to close." : orderNo + " returned to the technician.");
+  }
+
   return (
     <PortalShell role="Manager" active="Review queue">
       <header className="border-b border-slate-200 bg-white px-6 py-5 md:px-10">
@@ -16,26 +45,52 @@ export default function ManagerReviewsPage() {
       </header>
 
       <section className="space-y-4 px-6 py-8 md:px-10">
-        {reviewJobs.map((job) => (
-          <article key={job.id} className="flex flex-col justify-between gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-soft md:flex-row md:items-center">
-            <div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="font-semibold text-sea">{job.id}</span>
-                <span className="status-pill status-review">Needs review</span>
-              </div>
-              <h2 className="mt-3 text-lg font-semibold text-ink">{job.service} · {job.customer}</h2>
-              <p className="mt-1 text-sm text-slate-500">Completed by {job.technician} · {job.files} uploaded files</p>
-            </div>
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-xs uppercase tracking-wide text-slate-400">Final amount</p>
-                <p className="mt-1 font-semibold text-ink">{job.final}</p>
-                <p className={"mt-1 text-xs " + (job.final === job.quote ? "text-emerald-600" : "text-amber-600")}>Quoted {job.quote}</p>
-              </div>
-              <button className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Review job</button>
-            </div>
-          </article>
-        ))}
+        {notice && <div role="status" className="rounded-xl bg-mint px-4 py-3 text-sm font-medium text-emerald-900">{notice}</div>}
+
+        {reviewJobs.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center text-sm text-slate-500">
+            No completed jobs are waiting for review.
+          </div>
+        ) : (
+          reviewJobs.map((job) => {
+            const completion = completionFor(job.orderNo);
+            const finalAmount = completion?.finalAmount ?? job.quotedPrice;
+            const fileCount = completion?.fileNames.length ?? 0;
+            const technicianName = completion?.technicianName || job.assignedTechnician || "Technician";
+
+            return (
+              <article key={job.orderNo} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
+                <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-semibold text-sea">{job.orderNo}</span>
+                      <span className="status-pill status-review">Needs review</span>
+                    </div>
+                    <h2 className="mt-3 text-lg font-semibold text-ink">{job.serviceType} · {job.customerName}</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Completed by {technicianName} · {fileCount} uploaded files
+                    </p>
+                    {completion && <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{completion.workDone}</p>}
+                  </div>
+
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <div className="text-left sm:text-right">
+                      <p className="text-xs uppercase tracking-wide text-slate-400">Final amount</p>
+                      <p className="mt-1 font-semibold text-ink">RM{finalAmount.toFixed(2)}</p>
+                      <p className={"mt-1 text-xs " + (finalAmount === job.quotedPrice ? "text-emerald-600" : "text-amber-600")}>
+                        Quoted RM{job.quotedPrice.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => updateReview(job.orderNo, "In Progress")} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">Return</button>
+                      <button onClick={() => updateReview(job.orderNo, "Reviewed")} className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Approve</button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })
+        )}
       </section>
     </PortalShell>
   );
