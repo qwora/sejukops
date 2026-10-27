@@ -4,6 +4,8 @@ Internal operations system for **Sejuk Sejuk Service Sdn Bhd** (aircond installa
 
 **Live demo:** https://sejuksejuk.vercel.app · open it, pick a role, press **Continue**. No password needed.
 
+![Sejuk Sejuk mark](public/brand/sejuk-mark.svg)
+
 ```text
 Order → Assignment → Service completion → Notification → Manager review → Reporting
 New  →  Assigned  →  In Progress  →  Job Done  →  Reviewed  →  Closed
@@ -16,7 +18,7 @@ One Next.js app, one Supabase database, three role-specific experiences.
 | Role | Device | Design reference | Screens |
 | --- | --- | --- | --- |
 | **Admin** | Desktop | Shopify Admin | Orders (live stats, status tabs, search, branch/technician filters) · Create order (technician picker with live workload, WhatsApp preview) · Order detail (status stepper, assign / reassign, reschedule, activity timeline, notifications) |
-| **Technician** | Phone | Grab driver app | Today (next job, stats, today's list) · New job assigned (accept & start) · Job in progress (call / WhatsApp, checklist, sticky CTA) · Complete job (quick chips, ≤6 photos/video/PDF with previews, itemised extras, payment, auto final amount) · Job done (receipt + WhatsApp feedback message) · History |
+| **Technician** | Phone first, adapts to desktop · installable | Grab driver app | Today (next job, stats, today's list) · New job assigned (accept & start, or decline with a reason) · Job in progress (call / WhatsApp, checklist, sticky CTA) · Complete job (quick chips, ≤6 photos/video/PDF with previews, itemised extras, payment, auto final amount) · Job done (receipt + WhatsApp feedback message) · History |
 | **Manager** | Desktop | Shopify Admin | Review queue (supervisor flags, quote vs final) · Review detail (evidence previews, approve / return with notes / close) · Performance (today / week / month, daily chart, branches, leaderboard, reschedules, overload insight) · Ops assistant (full page + side panel) |
 
 ### Assessment coverage
@@ -32,6 +34,36 @@ One Next.js app, one Supabase database, three role-specific experiences.
 | Advanced · AI operational insight | ✅ overloaded technicians vs team average | dashboard insight + `overloaded_technicians` query |
 | Advanced · AI document understanding | ✅ photo of a job sheet / quotation / WhatsApp screenshot, or pasted text → name, phone, address, service, problem, amount, date | Create order → *Fill from a document*, `POST /api/ai/extract` |
 | Auth | ✅ mock role selector **and** real Supabase Auth (bonus) | `/login`, `/signup` |
+
+## Roles and permissions
+
+Enforced on the server in `lib/workflow.ts` (role + current status), not just hidden in the UI. A role that isn't allowed gets **403**; a wrong status gets **409**.
+
+| Action | Admin | Technician | Manager |
+| --- | --- | --- | --- |
+| Create order · fill from document (AI) | ✅ | — | — |
+| Assign / reassign · reschedule | ✅ (New or Assigned) | — | — |
+| See orders | all | own jobs | all, read-only |
+| Accept (start) or decline a job | — | ✅ own job only; decline needs a reason | — |
+| Complete job (photos, extras, payment, receipt) | — | ✅ own job only, once | — |
+| Approve / return with notes | — | — | ✅ |
+| Close a reviewed order | ✅ | — | ✅ |
+| Dashboard, Ops assistant, AI supervisor note | ✅ | — | ✅ |
+
+Declining puts the order back to **New**, unassigned, logs the reason and notifies the admin. Every action is written to the activity log with actor, role, from → to status and note.
+
+## Brand and design
+
+- Logo traced to SVG (`public/brand/`), used for the favicon (`app/icon.svg`) and generated app icons (`app/icons/[file]`).
+- Colours come from the logo: navy `#01202F`, steel blue `#2E7BAA` for actions, frost `#C3CAD1`; green is kept only for success. Tokens live in `tailwind.config.ts`.
+- Desktop follows Shopify Admin patterns; the technician app follows the Grab driver app; the landing page uses a dark, thin-type style.
+
+## Technician app on any device (PWA)
+
+- **Phone:** full-screen screens, one main action pinned to the bottom, bottom tabs.
+- **Tablet / desktop:** the same screens in a centred column with the technician's job list on the left. Nothing is forced to look like a phone.
+- **Installable:** web app manifest, app icons and a service worker. Android/Chrome shows an *Install* button; iPhone shows an *Add to Home Screen* hint. It opens full screen on the technician's jobs.
+- **Offline:** the app shell and an offline page are cached. Job data and API calls are never cached, so records are always live. Saving work offline is future work.
 
 ## Tech stack
 
@@ -130,7 +162,7 @@ Environment variables are listed in `.env.example`. Locally, the assistant uses 
 - **Row Level Security** is permissive for the prototype (anon can read/write the operations tables) so demo mode works. Production should remove the anon policies and require accounts.
 - Technicians see only their own jobs in the UI, and the API blocks starting or completing someone else's job when the technician is known.
 - Signup lets you choose a role. Production should use invitations.
-- No offline mode for technicians; uploads need a connection.
+- Technicians can install the app, but submitting a job still needs a connection (no offline queue yet).
 - No maps or GPS, matching the assessment scope.
 - Supabase's free email sender allows 2 emails per hour, so email confirmation is turned off.
 

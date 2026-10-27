@@ -30,9 +30,10 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 | Requirement | Status | Evidence |
 | --- | --- | --- |
 | New → Assigned → In Progress → Job Done → Reviewed → Closed | ✅ | `lib/workflow.ts` state machine; stepper on order and review pages |
-| Only Admin can assign technicians | ✅ | API returns "Only admin can assign a job." for other roles |
+| Only Admin can assign technicians | ✅ | API returns 403 "Only admin can assign a job." for other roles |
 | Only the assigned technician can complete | ✅ | API returns "Only the assigned technician can complete this job." |
-| Managers review completed jobs | ✅ | `/manager/reviews` → approve / return with notes / close |
+| Managers review completed jobs | ✅ | `/manager/reviews` → approve / return with notes / close; admins see the review read-only |
+| Technician can hand a job back | ➕ | Decline with a reason → order returns to New, admin notified, logged |
 | Key actions traceable | ✅ | `activity_logs` row for every action (actor, role, from → to, note); Activity timeline on order pages |
 | System sends notification on completion | ✅ | `notifications` rows + bell in the top bar |
 | Dashboard updates performance metrics | ✅ | KPIs computed live from records |
@@ -60,7 +61,7 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 
 | Field / item | Status | Notes |
 | --- | --- | --- |
-| Mobile-first, fast field workflow | ✅ | Phone-width shell, 48px+ buttons, sticky action |
+| Mobile-first, fast field workflow | ✅ | Full-screen on phones, 48px+ buttons, sticky action; adapts to desktop; installable as a PWA |
 | Order ID (read-only) | ✅ | Header of every job screen |
 | Work Done | ✅ | Quick chips + free text |
 | Extra Charges | ✅ | Preset chips + custom lines, stored itemised |
@@ -134,4 +135,4 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 | AI limitations | ✅ |
 | Implementation limitations | ✅ |
 | Self-assessment (easiest, hardest, production, AI tools) | ✅ |
-| Design: clean, simple, practical, no logo needed | ✅ |
+| Design: clean, simple, practical, no logo needed | ➕ | Company logo traced to SVG, favicon and app icons, brand colours from the logo |
