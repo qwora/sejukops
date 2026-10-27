@@ -144,6 +144,7 @@ Environment variables are listed in `.env.example`. Locally, the assistant uses 
 ## Docs
 
 - [plan.md](plan.md) – original implementation plan
+- [docs/assessment-checklist.md](docs/assessment-checklist.md) – every requirement, status and where to see it
 - [docs/decisions.md](docs/decisions.md) – architecture decisions
 - [docs/assessment-status.md](docs/assessment-status.md) – verified flow and status
 - [AGENTS.md](AGENTS.md) – rules for anyone continuing the work
