@@ -138,7 +138,7 @@ export async function runAction(actor: Actor, orderNo: string, action: WorkflowA
   const order = await loadOrder(db, orderNo);
   const current = statusFromDb[order.status];
   const check = checkTransition(action, actor.role, current);
-  if (!check.ok) throw new WorkflowError(check.error, 409);
+  if (!check.ok) throw new WorkflowError(check.error, check.status);
 
   const note = text(body.notes, 1000);
   const update: Record<string, unknown> = {};
@@ -224,7 +224,7 @@ export async function completeOrder(actor: Actor, orderNo: string, body: Record<
   const order = await loadOrder(db, orderNo);
   const current = statusFromDb[order.status];
   const check = checkTransition("complete", actor.role, current);
-  if (!check.ok) throw new WorkflowError(check.error, 409);
+  if (!check.ok) throw new WorkflowError(check.error, check.status);
   if (!order.technicians) throw new WorkflowError("This job has no assigned technician.");
   if (actor.technicianName && order.technicians.name !== actor.technicianName) {
     throw new WorkflowError("Only the assigned technician can complete this job.", 403);

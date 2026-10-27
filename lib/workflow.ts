@@ -42,10 +42,10 @@ export const WORKFLOW: Record<WorkflowAction, Rule> = {
 export function checkTransition(action: WorkflowAction, role: AppRole, current: OrderStatus) {
   const rule = WORKFLOW[action];
   if (!rule.roles.includes(role)) {
-    return { ok: false as const, error: `Only ${rule.roles.join(" or ")} can ${action} a job.` };
+    return { ok: false as const, error: `Only ${rule.roles.join(" or ")} can ${action} a job.`, status: 403 };
   }
   if (!rule.from.includes(current)) {
-    return { ok: false as const, error: `Cannot ${action} a job that is ${current}.` };
+    return { ok: false as const, error: `Cannot ${action} a job that is ${current}.`, status: 409 };
   }
   return { ok: true as const, next: rule.to ?? current };
 }
