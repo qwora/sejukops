@@ -2,7 +2,7 @@
 
 Internal operations system for **Sejuk Sejuk Service Sdn Bhd** (aircond installation, servicing and repair), built for the *Programmer Assessment – Operations System + AI Challenge*.
 
-**Live demo:** https://sejuksejukops.vercel.app · open it, pick a role, press **Continue**. No password needed.
+**Live demo:** https://sejuksejuk.vercel.app · open it, pick a role, press **Continue**. No password needed.
 
 ```text
 Order → Assignment → Service completion → Notification → Manager review → Reporting

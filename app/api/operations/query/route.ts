@@ -11,6 +11,15 @@ export const runtime = "nodejs";
 const UNSUPPORTED =
   "I can only answer questions about Sejuk Sejuk service records: completed jobs, technicians, revenue, the review queue, unassigned orders, workload and flagged jobs. Try one of the suggested questions.";
 
+/** Guard against the model dropping or changing numbers: every figure in the verified headline must appear. */
+function keepsKeyFigures(verified: string, candidate: string) {
+  const norm = (s: string) => s.replace(/,/g, "");
+  const headline = verified.split("\n")[0].replace(/\([^)]*\)/g, ""); // ignore date ranges in brackets
+  const figures = norm(headline).match(/\d+(?:\.\d+)?/g) ?? [];
+  const text = norm(candidate);
+  return figures.every((figure) => text.includes(figure) || text.includes(String(Number(figure))));
+}
+
 /**
  * Operations query window.
  * 1. Interpret: AI picks one intent from a fixed list (rules as fallback).
@@ -77,15 +86,20 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number and order number exactly as given. Plain text only: no markdown, no headings, no bullet symbols. Start with a one-sentence direct answer. If the rows contain an Order column and there are 6 or fewer rows, list each as 'ORDER1234 – detail' on its own line. Do not add a list for rankings; the table is shown separately. Reply in the language of the question. If there are no rows, say so plainly."
+                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number and order number exactly as given. Plain text only: no markdown, no headings, no bullet symbols. Start with a direct answer that keeps every key figure from deterministicAnswer (counts, amounts, averages, ratios, periods). If the rows contain an Order column and there are 6 or fewer rows, list each as 'ORDER1234 – detail' on its own line. Do not add a list for rankings; the table is shown separately. Reply in the language of the question. If there are no rows, say so plainly."
             },
             { role: "user", content: JSON.stringify({ question, intent, deterministicAnswer: result.answer, rows: result.rows.slice(0, 20) }) }
           ],
           { maxTokens: 300 }
         );
-        answer = formatted.content;
-        formattedBy = "ai";
-        model = model ?? formatted.model;
+        const cleaned = formatted.content.replace(/[ \t]+$/gm, "").replace(/\*\*/g, "").trim();
+        if (keepsKeyFigures(result.answer, cleaned)) {
+          answer = cleaned;
+          formattedBy = "ai";
+          model = model ?? formatted.model;
+        } else {
+          trace.push("AI answer dropped key figures; using the verified answer.");
+        }
       } catch (error) {
         trace.push("AI format failed: " + (error instanceof Error ? error.message.slice(0, 120) : "error"));
       }

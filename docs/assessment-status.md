@@ -2,7 +2,7 @@
 
 Last verified: 27 October 2026
 Working branch: `lockin-final` (merged to `main` for production)
-Production: https://sejuksejukops.vercel.app
+Production: https://sejuksejuk.vercel.app
 
 ## Lock-in update (27 Oct 2026)
 
