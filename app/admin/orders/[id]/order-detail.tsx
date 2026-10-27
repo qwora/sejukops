@@ -2,19 +2,43 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { readDemoOrders } from "@/lib/demo-orders";
+import { ensureDemoData, getOrderByNumber } from "@/lib/supabase/operations";
 import type { ServiceOrder } from "@/lib/order-types";
+
+const statusClass: Record<ServiceOrder["status"], string> = {
+  New: "status-new",
+  Assigned: "status-assigned",
+  "In Progress": "status-progress",
+  "Job Done": "status-done",
+  Reviewed: "status-review",
+  Closed: "status-done"
+};
 
 export function OrderDetail({ orderNo }: { orderNo: string }) {
   const [order, setOrder] = useState<ServiceOrder | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setOrder(readDemoOrders().find((item) => item.orderNo === orderNo) ?? null);
+    let active = true;
+    async function load() {
+      try {
+        await ensureDemoData();
+        const result = await getOrderByNumber(orderNo);
+        if (active) setOrder(result.order);
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : "Could not load this order.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
   }, [orderNo]);
 
-  if (!order) {
-    return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Order not found in the current demo workspace.</div>;
-  }
+  if (loading) return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Loading order from Supabase...</div>;
+  if (error) return <div role="alert" className="rounded-2xl bg-rose p-6 text-sm text-red-800">Could not load order: {error}</div>;
+  if (!order) return <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Order not found.</div>;
 
   const whatsappMessage = encodeURIComponent(
     "Hi " + order.customerName + ",\n\nJob " + order.orderNo + " has been completed by Technician " + (order.assignedTechnician || "our team") + ". Please check and leave feedback. Thank you!"
@@ -25,7 +49,7 @@ export function OrderDetail({ orderNo }: { orderNo: string }) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link href="/admin/orders" className="text-sm font-semibold text-sea hover:underline">← Back to orders</Link>
-        <span className="status-pill status-new">{order.status}</span>
+        <span className={"status-pill " + statusClass[order.status]}>{order.status}</span>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
@@ -52,9 +76,7 @@ export function OrderDetail({ orderNo }: { orderNo: string }) {
               <div className="border-t border-slate-100 pt-3 flex justify-between gap-3"><dt className="font-semibold text-ink">Quoted price</dt><dd className="font-semibold text-ink">RM{order.quotedPrice.toFixed(2)}</dd></div>
             </dl>
           </div>
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block rounded-2xl bg-[#dff7eb] px-5 py-4 text-center text-sm font-semibold text-emerald-900 hover:bg-[#c7f0dd]">
-            Open WhatsApp message
-          </a>
+          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block rounded-2xl bg-[#dff7eb] px-5 py-4 text-center text-sm font-semibold text-emerald-900 hover:bg-[#c7f0dd]">Open WhatsApp message</a>
         </aside>
       </div>
     </div>
