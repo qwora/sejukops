@@ -92,3 +92,51 @@ Reason:
 - Profiles provide a stable place for role and future branch or technician mapping.
 - Demo mode keeps the assessment preview easy to access before reviewer accounts exist.
 - The Auth client uses only the public Supabase anon key; no service-role key is exposed in the browser.
+
+## ADR-009: Writes go through server routes with one state machine
+
+Decision: All status changes and order writes go through `app/api/orders/*`, which call `lib/server/orders.ts`. Allowed transitions live in `lib/workflow.ts` (`WORKFLOW`).
+
+Reason:
+
+- Workflow rules are enforced in one place, not scattered across screens.
+- Every action writes an `activity_logs` row (actor, role, previous and new status, note), which makes key actions traceable.
+- The server recalculates the final amount, so the client cannot change prices.
+- Signed-in callers are verified with Supabase Auth; demo callers send a role header (documented limitation).
+
+## ADR-010: Notifications table for WhatsApp and internal alerts
+
+Decision: Job events create rows in `notifications` (channel `whatsapp` or `internal`, audience, message, link, status). WhatsApp delivery is a wa.me deep link that the user clicks; clicking marks the row `sent` and logs it.
+
+Reason:
+
+- Meets Module 3 (back-end trigger + deep link) without Business API credentials.
+- Swapping in the WhatsApp Cloud API later only changes how a `ready` row is delivered.
+
+## ADR-011: AI via Vercel AI Gateway with a fixed intent list
+
+Decision: The assistant asks the model to choose one intent from a fixed list (JSON), runs a typed Supabase query for that intent, then asks the model to word the answer from those rows only. Rules are the fallback for both steps.
+
+Reason:
+
+- The model never touches the database and cannot invent query shapes.
+- AI Gateway on Vercel authenticates with the deployment OIDC token, so no AI key is stored.
+- The deterministic fallback keeps the feature working locally and when AI is unavailable.
+
+## ADR-012: Design system
+
+Decision: Shopify Admin patterns for desktop (black top bar, grey sidebar, white cards, dense tables, status pills) and Grab driver patterns for the technician phone app (green header, one primary action pinned to the bottom, 48px+ targets). One shared token set in `tailwind.config.ts`; one colour per workflow status used everywhere.
+
+Reason:
+
+- Admins scan many orders; technicians need speed with one hand outdoors.
+- Shared tokens keep the two experiences recognisably one product.
+
+## ADR-013: Schema and demo data in the repo
+
+Decision: `supabase/migrations/` holds schema changes; `supabase/seed/` holds demo history tagged `[demo]`.
+
+Reason:
+
+- The schema was previously only in the Supabase dashboard.
+- Reviewers see a realistic two-week history in the KPI dashboard and AI answers; demo rows are easy to remove.

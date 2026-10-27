@@ -1,6 +1,25 @@
 # Assessment Status and Handoff
 
 Last verified: 27 October 2026
+Working branch: `lockin-final` (merged to `main` for production)
+Production: https://sejuksejukops.vercel.app
+
+## Lock-in update (27 Oct 2026)
+
+- New UI across all roles (Shopify-style admin and manager, Grab-style technician app).
+- All writes moved to server routes with one state machine and activity logs.
+- WhatsApp: server trigger on Job Done creates the customer message (exact assessment template) and a manager alert; Module 1 bonus message to technician on assignment.
+- AI: interpret → filtered query → format via Vercel AI Gateway, with rule fallback. Added overload insight and supervisor flags (two optional AI challenges).
+- Fixed: profile column mismatch (`full_name`) that broke login, phone numbers stored without country code, second review on the same order failing, order numbers generated in the browser.
+- Reschedule action and Postpone/Reschedule KPI added.
+- Verified end to end on 27 Oct with ORDER1267: create (admin) → accept, start, complete with photo and extra charge (technician) → WhatsApp link → approve and close (manager).
+
+Everything below is the earlier checkpoint, kept for history.
+
+---
+
+
+Last verified: 27 October 2026
 Working branch: `phase-3-technician-workflow`
 Latest verified workflow record: `ORDER1240`
 Latest preview: https://sejuksejukops-o9uo9svcl-klynns-projects.vercel.app

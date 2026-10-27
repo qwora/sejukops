@@ -5,7 +5,20 @@
  */
 const ENDPOINT = "https://ai-gateway.vercel.sh/v1/chat/completions";
 
-const DEFAULT_MODELS = ["google/gemini-3.7-flash", "openai/gpt-6.1-terra", "deepseek/deepseek-v4.1-flash-1017"];
+// Cheap, fast models first. Free-tier AI Gateway credit only covers some models, so we try in order
+// and remember which one works (and which are blocked) for the life of the function instance.
+const DEFAULT_MODELS = [
+  "openai/gpt-4o-mini",
+  "google/gemini-2.5-flash-lite",
+  "openai/gpt-4.1-nano",
+  "google/gemini-2.5-flash",
+  "mistral/ministral-8b",
+  "alibaba/qwen-3-14b",
+  "nvidia/nemotron-3.5-lightning-free"
+];
+
+let preferred: string | null = null;
+const blocked = new Set<string>();
 
 export type ChatMessage = { role: "system" | "user" | "assistant"; content: string };
 
@@ -20,7 +33,10 @@ export function aiModels() {
 
 export async function chat(token: string, messages: ChatMessage[], options: { json?: boolean; maxTokens?: number } = {}) {
   let lastError = "";
-  for (const model of aiModels()) {
+  const errors: string[] = [];
+  const candidates = aiModels().filter((model) => !blocked.has(model));
+  const ordered = preferred && candidates.includes(preferred) ? [preferred, ...candidates.filter((m) => m !== preferred)] : candidates;
+  for (const model of ordered) {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 12000);
@@ -38,16 +54,24 @@ export async function chat(token: string, messages: ChatMessage[], options: { js
       });
       clearTimeout(timer);
       if (!response.ok) {
-        lastError = model + ": " + response.status + " " + (await response.text()).slice(0, 200);
+        const text = (await response.text()).slice(0, 160);
+        if (response.status === 403 || response.status === 404) blocked.add(model);
+        lastError = model + ": " + response.status + " " + text;
+        errors.push(model + " " + response.status);
         continue;
       }
       const body = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
       const content = body.choices?.[0]?.message?.content?.trim();
-      if (content) return { content, model };
+      if (content) {
+        preferred = model;
+        return { content, model };
+      }
       lastError = model + ": empty response";
+      errors.push(model + " empty");
     } catch (error) {
       lastError = model + ": " + (error instanceof Error ? error.message : "request failed");
+      errors.push(model + " error");
     }
   }
-  throw new Error(lastError || "AI Gateway unavailable");
+  throw new Error((errors.length > 1 ? "tried " + errors.join(", ") + " · last: " : "") + (lastError || "AI Gateway unavailable"));
 }

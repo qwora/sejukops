@@ -1,84 +1,136 @@
-# Sejuk Sejuk Operations
+# Sejuk Ops
 
-A role-based operations system for an air-conditioner service company, built for the Programmer Assessment — Operations System + AI Challenge.
+Internal operations system for **Sejuk Sejuk Service Sdn Bhd** (aircond installation, servicing and repair), built for the *Programmer Assessment – Operations System + AI Challenge*.
 
-## Product
+**Live demo:** https://sejuksejukops.vercel.app · open it, pick a role, press **Continue**. No password needed.
 
-The system digitises:
+```text
+Order → Assignment → Service completion → Notification → Manager review → Reporting
+New  →  Assigned  →  In Progress  →  Job Done  →  Reviewed  →  Closed
+```
 
-~~~text
-Order → Assignment → Service Completion → Notification → Manager Review → Reporting
-~~~
+## What I built
 
-It is designed as one web application with separate experiences for:
+One Next.js app, one Supabase database, three role-specific experiences.
 
-- Admins working mainly on desktop
-- Technicians working mainly on mobile
-- Managers reviewing jobs and operational data
+| Role | Device | Design reference | Screens |
+| --- | --- | --- | --- |
+| **Admin** | Desktop | Shopify Admin | Orders (live stats, status tabs, search, branch/technician filters) · Create order (technician picker with live workload, WhatsApp preview) · Order detail (status stepper, assign / reassign, reschedule, activity timeline, notifications) |
+| **Technician** | Phone | Grab driver app | Today (next job, stats, today's list) · New job assigned (accept & start) · Job in progress (call / WhatsApp, checklist, sticky CTA) · Complete job (quick chips, ≤6 photos/video/PDF with previews, itemised extras, payment, auto final amount) · Job done (receipt + WhatsApp feedback message) · History |
+| **Manager** | Desktop | Shopify Admin | Review queue (supervisor flags, quote vs final) · Review detail (evidence previews, approve / return with notes / close) · Performance (today / week / month, daily chart, branches, leaderboard, reschedules, overload insight) · Ops assistant (full page + side panel) |
 
-## UI direction
+### Assessment coverage
 
-The admin portal is inspired by Shopify Admin:
+| Module | Status | Where |
+| --- | --- | --- |
+| 1 · Admin order submission | ✅ + both bonuses (summary page, WhatsApp to technician) | `/admin/orders/new` → `/admin/orders/[id]` |
+| 2 · Technician service job | ✅ + payment bonus, feedback message bonus, manager notified | `/technician/jobs/...` |
+| 3 · WhatsApp trigger on Job Done | ✅ server-side trigger + wa.me deep link | `lib/server/orders.ts → completeOrder` |
+| Bonus · KPI dashboard | ✅ jobs, amount, postpone/reschedule, leaderboard, chart, branch view | `/manager/dashboard` |
+| AI · Operations query window | ✅ interpret → query → format | `/manager/assistant`, `POST /api/operations/query` |
+| Advanced · AI workflow supervisor | ✅ amount over quote, no photos, unexplained extras, underpayment | `lib/supervisor.ts`, review screens, `flagged_jobs` query |
+| Advanced · AI operational insight | ✅ overloaded technicians vs team average | dashboard insight + `overloaded_technicians` query |
+| Advanced · AI document understanding | ❌ not built | — |
+| Auth | ✅ mock role selector **and** real Supabase Auth (bonus) | `/login`, `/signup` |
 
-- Orders are the primary object
-- Admins create, assign and track service orders
-- Order details show assignment, status and activity
-- A Sidekick-style assistant opens in a right-side panel
+## Tech stack
 
-The technician portal is inspired by Grab's rider workflow:
+Next.js 15 (App Router) · React 19 · TypeScript · Tailwind CSS · Supabase (Postgres, Auth, Storage) · Vercel (hosting + AI Gateway) · lucide-react icons · Inter.
 
-- Mobile-first job cards
-- Large touch targets
-- Minimal typing
-- Clear next action
-- Fast completion and evidence upload
+No other runtime dependencies.
 
-## Planned stack
+## Architecture decisions
 
-- Next.js and React
-- TypeScript
-- Tailwind CSS
-- Supabase PostgreSQL
-- Supabase Storage
-- Vercel
-- Serverless route handlers
-- AI provider through controlled backend queries
+- **One app, one data model, role-based UI.** All roles share the same orders, so status rules live in one place (`lib/workflow.ts`).
+- **Reads on the client, writes on the server.** Screens read through `lib/data.ts`. Every change goes through an API route (`app/api/orders/...`) that resolves the caller, checks the role and the current status against the state machine, writes the change, writes an **activity log** row (actor, previous → new status, note) and creates **notifications**.
+- **Server recalculates money.** Final amount = quoted price + extra charges, computed on the server; the quote is never overwritten. Extra charges are stored as line items.
+- **Order numbers from a Postgres sequence** (`ORDER1241`, `ORDER1242`…), so two admins can't create the same number.
+- **Evidence** is uploaded to a private Supabase Storage bucket; managers see it through short-lived signed URLs. Max 6 files, 25 MB each, checked on client and server.
+- **Phone numbers** are normalised to Malaysian E.164 (`012-345 6789` → `60123456789`) so WhatsApp links open the right chat.
+- Database changes are kept as SQL in `supabase/migrations` and demo data in `supabase/seed` (all demo rows are tagged `[demo]`).
 
-The assessment permits a mock role selector. Real Supabase Auth is now available for email/password accounts, with the demo selector retained for assessment previews.
+More detail: [docs/decisions.md](docs/decisions.md).
 
-## Current implementation
+## WhatsApp (Module 3)
 
-- Admin order creation and assignment
-- Technician mobile service workflow
-- Supabase Storage evidence upload
-- Manager review, approval, return and close flow
-- Weekly KPI dashboard and technician leaderboard
-- Controlled Operations Query API and Manager Sidekick
-- Supabase email/password Auth with role profiles
-- Manual WhatsApp deep links
+When a technician submits a job, `completeOrder` (server) sets the status to **Job Done** and in the same request:
 
-See [docs/assessment-status.md](docs/assessment-status.md) for the assessment comparison, verified flow and known limitations.
+1. Builds the assessment's message: *Hi {Customer}, Job {Order} has been completed by Technician {Name} at {Time}. Please check and leave feedback. Thank you!*
+2. Stores it in `notifications` with a `https://wa.me/60…?text=…` link (status `ready`).
+3. Creates an internal notification for the manager / accounts (shown in the top-bar bell).
 
-See [docs/ui-roadmap.md](docs/ui-roadmap.md) for the next UI-focused phase.
+The technician's **Job done** screen, the order page and the bell all show a **Send on WhatsApp** button. Clicking it opens WhatsApp with the message filled in and marks the notification `sent` (logged in the activity timeline). Assigning a technician creates a matching "new job" message for the technician.
 
-## Important limitations
+Not included: automatic sending through the WhatsApp Business (Cloud) API. That needs a Meta business account, a registered number and approved templates. The `notifications` table already has the shape needed to switch to API delivery later without changing the workflow.
 
-- WhatsApp currently uses a pre-filled wa.me link for manual sending.
-- WhatsApp Business API credentials and business phone registration are not included yet.
-- AI queries use controlled intent handlers and structured Supabase results.
-- OpenAI formatting is optional and requires a server-side `OPENAI_API_KEY`.
-- Some role restrictions are still simulated for the assessment preview.
-- The AI is not a general-purpose chatbot.
+## How AI is integrated
 
-## Handoff
+`POST /api/operations/query` (managers and admins only):
 
-A new developer or AI agent should read these files in order:
+```text
+Question
+  → 1. Interpret: the model must pick ONE intent from a fixed list and return JSON
+        (falls back to a rule-based classifier if AI is unavailable)
+  → 2. Retrieve: a typed Supabase query for that intent only
+        (date range, technician, status filters pushed into the query, limited columns)
+  → 3. Format: the model writes the answer using ONLY those rows
+        (falls back to the deterministic answer)
+  → UI shows the intent, its parameters, the rows used and whether AI or rules answered
+```
 
-1. AGENTS.md
-2. plan.md
-3. docs/decisions.md
-4. docs/assessment-status.md
-5. docs/ui-roadmap.md
-6. The relevant source files for the current phase
+The model never sees the database, credentials or unrelated rows, and cannot write data. AI runs through **Vercel AI Gateway** using the deployment's built-in OIDC token, so no API key is stored. The model list is configurable (`AI_MODEL`).
 
-The technical workflow has been verified on the deployed preview. Future work should focus primarily on UI quality while preserving the working data flow and state transitions.
+**Supported questions**
+
+- What jobs did technician *Ali* complete *last week*? (any technician, today / yesterday / this week / last week / last 7 days / this month)
+- Which technician completed the most jobs (or brought in the most revenue) this week?
+- How many jobs were completed today? / How much did we collect this month?
+- Which jobs are waiting for manager review?
+- Which orders are unassigned?
+- Which technician might be overloaded this week? (≥ 1.5× team average)
+- Show flagged jobs this week (≥ 25 % over quote, or no photos)
+- Which jobs had extra charges above RM 100?
+
+**Limitations**
+
+- Only the question types above. Anything else gets a fixed "I can only answer…" reply with suggestions.
+- One question at a time: no follow-ups that depend on the previous answer ("and John?").
+- Dates are interpreted in Malaysia time using fixed periods; custom date ranges aren't parsed.
+- The model may phrase things differently between runs, but numbers come from the query rows. If AI is down, rule-based answers are used.
+- AI Gateway free credit is limited; heavy use would need paid credit.
+
+## Running locally
+
+```bash
+npm install
+cp .env.example .env.local   # add your Supabase URL + anon key
+npm run dev
+```
+
+Database: run `supabase/migrations/20261027_lockin.sql`, then (optional) the two files in `supabase/seed/`, in the Supabase SQL editor.
+
+Environment variables are listed in `.env.example`. Locally, the assistant uses rules unless `AI_GATEWAY_API_KEY` is set.
+
+## Assumptions and limitations
+
+- **Demo access.** Reviewers can pick a role without an account. In demo mode the role is sent as a header and trusted by the API. With a real account the API verifies the Supabase session and reads the role from `profiles`.
+- **Row Level Security** is permissive for the prototype (anon can read/write the operations tables) so demo mode works. Production should remove the anon policies and require accounts.
+- Technicians see only their own jobs in the UI, and the API blocks starting or completing someone else's job when the technician is known.
+- Signup lets you choose a role. Production should use invitations.
+- No offline mode for technicians; uploads need a connection.
+- No maps or GPS, matching the assessment scope.
+- Supabase's free email sender allows 2 emails per hour, so email confirmation is turned off.
+
+## Self-assessment
+
+- **Easiest:** Module 1. The form is simple once the data model and state machine exist.
+- **Hardest:** making the AI genuinely controlled: forcing the model into a fixed intent list, keeping retrieval narrow, and still giving useful, readable answers with a safe fallback. Second hardest: making the technician completion flow fast on a phone (chips, presets, sticky total) without losing data quality.
+- **For production I would add:** remove anon RLS policies and enforce roles in Postgres; WhatsApp Cloud API with delivery webhooks; offline queue for technicians; customer feedback capture; scheduling/calendar view with conflict checks; automated tests for the state machine and AI intents; audit export for accounts.
+- **How I used AI tools:** Codex built the first working version (Supabase wiring, workflow, first UI). Claude audited it, found and fixed the auth profile bug, phone format and single-review bugs, designed the UI (Shopify / Grab references), rebuilt the interface, moved writes server-side with activity logs and notifications, and built the AI query pipeline. Every flow was then tested end to end in the browser.
+
+## Docs
+
+- [plan.md](plan.md) – original implementation plan
+- [docs/decisions.md](docs/decisions.md) – architecture decisions
+- [docs/assessment-status.md](docs/assessment-status.md) – verified flow and status
+- [AGENTS.md](AGENTS.md) – rules for anyone continuing the work
