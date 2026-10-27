@@ -11,7 +11,7 @@ import { getOrderBundle, listTechnicians } from "@/lib/data";
 import { apiPost } from "@/lib/api";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
-import { formatDateTime, relativeSlot } from "@/lib/format";
+import { formatDateTime, isoToMyLocalInput, myLocalInputToIso, relativeSlot } from "@/lib/format";
 
 export default function OrderDetailPage() {
   return (
@@ -22,8 +22,7 @@ export default function OrderDetailPage() {
 }
 
 function toLocalInput(iso: string | null) {
-  const date = iso ? new Date(iso) : new Date(Date.now() + 86400000);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  return isoToMyLocalInput(iso ?? new Date(Date.now() + 86400000));
 }
 
 function OrderDetail() {
@@ -160,10 +159,10 @@ function OrderDetail() {
                   <Button size="sm" variant="ghost" icon={<CalendarClock className="h-4 w-4" />} onClick={() => setShowReschedule(true)}>Reschedule</Button>
                 ) : (
                   <div className="space-y-2 animate-fade-up">
-                    <label className="label">New slot<input type="datetime-local" className="field-input num" value={slot} onChange={(e) => setSlot(e.target.value)} /></label>
+                    <label className="label"><span>New slot <span className="hint">· Malaysia time</span></span><input type="datetime-local" className="field-input num" value={slot} onChange={(e) => setSlot(e.target.value)} /></label>
                     <label className="label">Reason<input className="field-input" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Customer not home" /></label>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="primary" loading={busy === "reschedule"} onClick={() => act("reschedule", { scheduledAt: new Date(slot).toISOString(), notes: reason }, "Job rescheduled.")}>Save</Button>
+                      <Button size="sm" variant="primary" loading={busy === "reschedule"} onClick={() => act("reschedule", { scheduledAt: myLocalInputToIso(slot), notes: reason }, "Job rescheduled.")}>Save</Button>
                       <Button size="sm" onClick={() => setShowReschedule(false)}>Cancel</Button>
                     </div>
                   </div>
