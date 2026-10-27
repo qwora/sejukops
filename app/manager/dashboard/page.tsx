@@ -10,7 +10,7 @@ import { useLoad } from "@/lib/use-load";
 import { money } from "@/lib/format";
 import { computeKpis, type KpiPeriod } from "@/lib/kpi";
 
-const BRANCH_COLORS: Record<string, string> = { "Shah Alam": "#0B7A5A", "Petaling Jaya": "#2F6FED", "Kuala Lumpur": "#E8A317", Langkawi: "#8E5CD9", Penang: "#D9534F" };
+const BRANCH_COLORS: Record<string, string> = { "Shah Alam": "#2E7BAA", "Petaling Jaya": "#0E7490", "Kuala Lumpur": "#C2620A", Langkawi: "#6D4FC2", Penang: "#B42318" };
 
 export default function DashboardPage() {
   return (
@@ -21,12 +21,12 @@ export default function DashboardPage() {
 }
 
 function Change({ value, invert, suffix = "%" }: { value: number | null; invert?: boolean; suffix?: string }) {
-  if (value === null) return <span className="text-xs font-semibold text-brand-ink">new</span>;
+  if (value === null) return <span className="text-xs font-semibold text-ok">new</span>;
   if (value === 0) return <span className="text-xs text-ink-muted">no change</span>;
   const good = invert ? value < 0 : value > 0;
   const Icon = value > 0 ? TrendingUp : TrendingDown;
   return (
-    <span className={cx("inline-flex items-center gap-0.5 text-xs font-semibold", good ? "text-brand-ink" : "text-danger")}>
+    <span className={cx("inline-flex items-center gap-0.5 text-xs font-semibold", good ? "text-ok" : "text-danger")}>
       <Icon className="h-3.5 w-3.5" />{value > 0 ? "+" : ""}{value}{suffix}
     </span>
   );
@@ -50,7 +50,7 @@ function Dashboard() {
       <PageHeader
         title="Performance"
         meta={
-          <div className="flex gap-0.5 rounded-[9px] bg-[#E3E3E3] p-0.5" role="tablist" aria-label="Period">
+          <div className="flex gap-0.5 rounded-[9px] bg-rail p-0.5" role="tablist" aria-label="Period">
             {(["today", "week", "month"] as const).map((p) => (
               <button key={p} role="tab" aria-selected={period === p} onClick={() => setPeriod(p)} className={cx("h-7 rounded-[7px] px-3 text-[12.5px] font-semibold capitalize transition", period === p ? "bg-white text-ink shadow-[0_1px_2px_rgba(0,0,0,.12)]" : "text-ink-muted")}>
                 {p === "week" ? "This week" : p === "month" ? "Month" : "Today"}
@@ -75,7 +75,7 @@ function Dashboard() {
             ].map((item) => (
               <div key={item.label} className="card p-4">
                 <div className="text-xs font-medium text-ink-muted">{item.label}</div>
-                <div className="num mt-1 text-2xl font-bold tracking-tight text-ink">{item.value}</div>
+                <div className="num mt-1 text-[28px] font-extralight tracking-tight text-ink">{item.value}</div>
                 <div className="mt-1">{item.extra}</div>
               </div>
             ))}
@@ -85,7 +85,7 @@ function Dashboard() {
             <Card className="min-w-0 flex-[999_1_520px]" title={period === "month" ? "Jobs completed per day this month" : "Jobs completed · last 7 days"} action={
               <div className="flex gap-3 text-xs text-ink-muted">
                 <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-brand" />Completed</span>
-                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-[#F2B544]" />Rescheduled</span>
+                <span className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-[3px] bg-[#E3B04B]" />Rescheduled</span>
               </div>
             }>
               <div className="flex h-[230px] items-stretch gap-1.5 pt-2" role="img" aria-label={"Bar chart: " + k.days.map((d) => `${d.label} ${d.jobs} jobs`).join(", ")}>
@@ -95,8 +95,8 @@ function Dashboard() {
                     <div key={d.key} className="group flex min-w-0 flex-1 flex-col items-center gap-1.5">
                       <div className="flex w-full flex-1 flex-col items-center justify-end gap-[2px]">
                         <span className="num text-[11px] font-semibold text-ink-2 opacity-80 group-hover:opacity-100">{d.jobs || ""}</span>
-                        {d.rescheduled > 0 && <div className="w-full max-w-[44px] rounded-t-[3px] bg-[#F2B544]" style={{ height: (d.rescheduled / maxDay) * 170 }} />}
-                        <div className={cx("w-full max-w-[44px] rounded-[3px] transition", isLast ? "bg-brand" : "bg-[#7CC4A9] group-hover:bg-brand")} style={{ height: Math.max(2, (d.jobs / maxDay) * 170) }} />
+                        {d.rescheduled > 0 && <div className="w-full max-w-[44px] rounded-t-[3px] bg-[#E3B04B]" style={{ height: (d.rescheduled / maxDay) * 170 }} />}
+                        <div className={cx("w-full max-w-[44px] rounded-[3px] transition", isLast ? "bg-brand" : "bg-[#9CC5DE] group-hover:bg-brand")} style={{ height: Math.max(2, (d.jobs / maxDay) * 170) }} />
                       </div>
                       <span className={cx("text-[11px]", isLast ? "font-bold text-ink" : "font-medium text-ink-muted")}>{d.label}</span>
                     </div>
@@ -110,7 +110,7 @@ function Dashboard() {
               {k.branches.map(([name, value]) => (
                 <div key={name} className="space-y-1.5">
                   <div className="flex justify-between text-[13px]"><span className="font-medium">{name}</span><span className="num text-ink-muted">{value} jobs</span></div>
-                  <div className="h-2 rounded-full bg-[#F1F1F1]"><div className="h-2 rounded-full" style={{ width: (value / maxBranch) * 100 + "%", background: BRANCH_COLORS[name] ?? "#8A8A8A" }} /></div>
+                  <div className="h-2 rounded-full bg-rail"><div className="h-2 rounded-full" style={{ width: (value / maxBranch) * 100 + "%", background: BRANCH_COLORS[name] ?? "#8AA2B0" }} /></div>
                 </div>
               ))}
               <div className="mt-auto rounded-[10px] bg-ai-tint px-3 py-2.5 text-[12.5px] leading-relaxed text-ai-ink shadow-[0_0_0_1px_#E2D5FA]">
@@ -138,10 +138,10 @@ function Dashboard() {
                   </thead>
                   <tbody>
                     {k.leaderboard.map((t, i) => {
-                      const tone = t.overloaded ? "#B42318" : t.jobs === 0 ? "#8A8A8A" : "#0B7A5A";
+                      const tone = t.overloaded ? "#B42318" : t.jobs === 0 ? "#8AA2B0" : "#2E7BAA";
                       return (
-                        <tr key={t.name} className="border-b border-[#F4F4F4] text-[13px]">
-                          <td className="num py-2.5 pl-4 pr-3 font-bold" style={{ color: i < 3 && t.jobs ? "#0B7A5A" : "#8A8A8A" }}>{i + 1}</td>
+                        <tr key={t.name} className="border-b border-line text-[13px]">
+                          <td className="num py-2.5 pl-4 pr-3 font-bold" style={{ color: i < 3 && t.jobs ? "#2E7BAA" : "#8AA2B0" }}>{i + 1}</td>
                           <td className="px-3 py-2.5"><span className="flex items-center gap-2.5"><Avatar name={t.name} size={28} /><span className="font-semibold">{t.name}</span></span></td>
                           <td className="num px-3 py-2.5 text-right font-semibold">{t.jobs}</td>
                           <td className="num px-3 py-2.5 text-right">{money(t.amount, 0)}</td>
@@ -150,7 +150,7 @@ function Dashboard() {
                           <td className="num px-3 py-2.5 text-right">{t.open}</td>
                           <td className="px-3 py-2.5">
                             <span className="flex items-center gap-2">
-                              <span className="h-1.5 flex-1 rounded-full bg-[#F1F1F1]"><span className="block h-1.5 rounded-full" style={{ width: Math.min(100, t.ratio * 50) + "%", background: tone }} /></span>
+                              <span className="h-1.5 flex-1 rounded-full bg-rail"><span className="block h-1.5 rounded-full" style={{ width: Math.min(100, t.ratio * 50) + "%", background: tone }} /></span>
                               <span className="w-[72px] text-[11px] font-semibold" style={{ color: tone }}>{t.overloaded ? "Overloaded" : t.jobs === 0 ? "Idle" : "Normal"}</span>
                             </span>
                           </td>

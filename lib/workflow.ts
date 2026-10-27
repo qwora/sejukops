@@ -20,7 +20,7 @@ export const statusFromDb: Record<string, OrderStatus> = {
   closed: "Closed"
 };
 
-export type WorkflowAction = "assign" | "start" | "complete" | "approve" | "return" | "close" | "reschedule";
+export type WorkflowAction = "assign" | "start" | "decline" | "complete" | "approve" | "return" | "close" | "reschedule";
 
 type Rule = { roles: AppRole[]; from: OrderStatus[]; to?: OrderStatus; label: string };
 
@@ -32,6 +32,7 @@ export const WORKFLOW: Record<WorkflowAction, Rule> = {
   assign: { roles: ["admin"], from: ["New", "Assigned"], to: "Assigned", label: "Technician assigned" },
   reschedule: { roles: ["admin"], from: ["New", "Assigned"], label: "Job rescheduled" },
   start: { roles: ["technician"], from: ["Assigned"], to: "In Progress", label: "Job started" },
+  decline: { roles: ["technician"], from: ["Assigned"], to: "New", label: "Declined by technician" },
   complete: { roles: ["technician"], from: ["In Progress"], to: "Job Done", label: "Job marked done" },
   approve: { roles: ["manager"], from: ["Job Done"], to: "Reviewed", label: "Reviewed by manager" },
   return: { roles: ["manager"], from: ["Job Done"], to: "In Progress", label: "Returned to technician" },
@@ -41,10 +42,10 @@ export const WORKFLOW: Record<WorkflowAction, Rule> = {
 export function checkTransition(action: WorkflowAction, role: AppRole, current: OrderStatus) {
   const rule = WORKFLOW[action];
   if (!rule.roles.includes(role)) {
-    return { ok: false as const, error: `Only ${rule.roles.join(" or ")} can ${action} a job.` };
+    return { ok: false as const, error: `Only ${rule.roles.join(" or ")} can ${action} a job.`, status: 403 };
   }
   if (!rule.from.includes(current)) {
-    return { ok: false as const, error: `Cannot ${action} a job that is ${current}.` };
+    return { ok: false as const, error: `Cannot ${action} a job that is ${current}.`, status: 409 };
   }
   return { ok: true as const, next: rule.to ?? current };
 }

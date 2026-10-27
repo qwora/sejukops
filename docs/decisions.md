@@ -140,3 +140,32 @@ Reason:
 
 - The schema was previously only in the Supabase dashboard.
 - Reviewers see a realistic two-week history in the KPI dashboard and AI answers; demo rows are easy to remove.
+
+## ADR-014: Brand refresh from the company logo
+
+Decision: Replace the interim green theme with colours taken from the Sejuk Sejuk logo (navy, steel blue, frost). Keep green only for success states and WhatsApp.
+
+Reason:
+
+- The product should look like the company, not like a template.
+- Separating brand blue from success green keeps "done" unambiguous.
+- One token set in `tailwind.config.ts`; the traced SVG mark feeds the favicon and every app icon, so the logo is defined once (`lib/brand.ts`).
+
+## ADR-015: Technician app is mobile-first, responsive and installable
+
+Decision: Technicians get full-screen phone screens; on large screens the same screens sit in a centred column with a job list beside them. The app ships as a PWA (manifest, icons, service worker).
+
+Reason:
+
+- The brief says technicians mainly use phones, but forcing a phone frame on a laptop is artificial.
+- Installing to the home screen gives an app-like experience without an app store.
+- The service worker caches only the app shell and an offline page, never job data, so there is no risk of acting on stale records.
+
+## ADR-016: Technicians can decline an assigned job
+
+Decision: Add a `decline` transition (Assigned → New) for the assigned technician, with a required reason. The technician is unassigned, the admin is notified and the reason is logged.
+
+Reason:
+
+- In real operations a technician may be sick or the job may need different skills.
+- Keeping assignment admin-only (as the brief requires) while letting the technician hand the job back is the smallest change that matches reality.

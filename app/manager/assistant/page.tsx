@@ -41,7 +41,7 @@ export default function AssistantPage() {
             <h2 className="text-[13px] font-semibold text-ink">How answers are built</h2>
             {STEPS.map((step, i) => (
               <div key={step} className="flex gap-2.5 text-[12.5px] leading-snug text-ink-2">
-                <span className="num flex h-5 w-5 flex-none items-center justify-center rounded-md bg-[#F1F1F1] text-[11px] font-bold">{i + 1}</span>{step}
+                <span className="num flex h-5 w-5 flex-none items-center justify-center rounded-md bg-rail text-[11px] font-bold">{i + 1}</span>{step}
               </div>
             ))}
           </div>

@@ -105,7 +105,7 @@ function NewOrderForm() {
 
   return (
     <form onSubmit={submit} noValidate className="mx-auto flex max-w-[1040px] flex-col gap-4">
-      <PageHeader back="/admin/orders" title="Create order" meta={<span className="num rounded-md bg-[#E3E3E3] px-2 py-0.5 text-xs font-semibold text-ink-muted">Order no. assigned on save</span>} />
+      <PageHeader back="/admin/orders" title="Create order" meta={<span className="num rounded-md bg-rail px-2 py-0.5 text-xs font-semibold text-ink-muted">Order no. assigned on save</span>} />
       {error && <ErrorBanner message={error} />}
 
       <div className="flex flex-wrap items-start gap-4">
@@ -128,7 +128,7 @@ function NewOrderForm() {
               </label>
               <label className="label">Phone
                 <div className="flex gap-1.5">
-                  <span className="flex h-9 items-center rounded-lg border border-line-input bg-[#F7F7F7] px-2.5 text-[13px] text-ink-muted">+60</span>
+                  <span className="flex h-9 items-center rounded-lg border border-line-input bg-canvas px-2.5 text-[13px] text-ink-muted">+60</span>
                   <input className={cx("field-input num", fieldClass(invalid.customerPhone))} inputMode="tel" value={form.customerPhone} onChange={(e) => update("customerPhone", e.target.value)} placeholder="12-345 6789" />
                 </div>
                 {touched && invalid.customerPhone && <span className="text-xs font-normal text-danger">Enter a Malaysian mobile number</span>}
@@ -175,7 +175,7 @@ function NewOrderForm() {
                   }
                 />
               ))}
-              {!data && Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[62px] animate-pulse rounded-[10px] bg-[#F1F1F1]" />)}
+              {!data && Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[62px] animate-pulse rounded-[10px] bg-rail" />)}
             </div>
           </Card>
 
@@ -190,7 +190,7 @@ function NewOrderForm() {
           <Card title="Pricing">
             <label className="label">Quoted price
               <div className="flex gap-1.5">
-                <span className="flex h-9 items-center rounded-lg border border-line-input bg-[#F7F7F7] px-2.5 text-[13px] text-ink-muted">RM</span>
+                <span className="flex h-9 items-center rounded-lg border border-line-input bg-canvas px-2.5 text-[13px] text-ink-muted">RM</span>
                 <input className={cx("field-input num", fieldClass(invalid.quotedPrice))} inputMode="decimal" type="number" min="0" step="1" value={form.quotedPrice} onChange={(e) => update("quotedPrice", e.target.value)} placeholder="0.00" />
               </div>
             </label>
@@ -201,10 +201,10 @@ function NewOrderForm() {
             </div>
           </Card>
 
-          <Card title="Notify technician" action={<MessageCircle className="h-4 w-4 text-[#128C4B]" aria-hidden />}>
+          <Card title="Notify technician" action={<MessageCircle className="h-4 w-4 text-[#0B6E4F]" aria-hidden />}>
             {form.technician ? (
-              <div className="rounded-[10px] bg-[#E7F7EE] p-3 text-[12.5px] leading-relaxed text-[#1A3D2E]">
-                <div className="mb-1 text-[11px] font-semibold text-brand-ink">WhatsApp preview → {form.technician}</div>
+              <div className="rounded-2xl bg-whatsapp-bubble/60 p-3 text-[12.5px] leading-relaxed text-[#12301F]">
+                <div className="mb-1 text-[11px] font-semibold text-ok">WhatsApp preview → {form.technician}</div>
                 <p className="whitespace-pre-line">{preview}</p>
               </div>
             ) : (
@@ -229,7 +229,7 @@ function TechOption({ selected, onSelect, name, title, meta, badge }: { selected
       role="radio"
       aria-checked={selected}
       onClick={onSelect}
-      className={cx("flex w-full items-center gap-3 rounded-[10px] border bg-white p-3 text-left transition", selected ? "border-ink bg-[#FAFAFA] shadow-[0_0_0_1px_#1A1A1A]" : "border-[#E3E3E3] hover:border-ink-faint")}
+      className={cx("flex w-full items-center gap-3 rounded-[10px] border bg-white p-3 text-left transition", selected ? "border-ink bg-[#F7FAFC] shadow-[0_0_0_1px_#2E7BAA]" : "border-[#E3E3E3] hover:border-ink-faint")}
     >
       <Avatar name={name} size={36} />
       <span className="min-w-0 flex-1">

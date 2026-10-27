@@ -11,9 +11,9 @@ import { technicianOptions } from "@/lib/order-types";
 import { Button, cx, ErrorBanner } from "@/components/ui/primitives";
 
 const ROLES: Array<{ role: AppRole; name: string; desc: string; icon: React.ReactNode; tint: string }> = [
-  { role: "admin", name: "Admin", desc: "Create orders and assign technicians", icon: <ClipboardList className="h-5 w-5" />, tint: "bg-[#F1F1F1] text-ink" },
+  { role: "admin", name: "Admin", desc: "Create orders and assign technicians", icon: <ClipboardList className="h-5 w-5" />, tint: "bg-navy text-white" },
   { role: "technician", name: "Technician", desc: "See today’s jobs and complete service", icon: <Wrench className="h-5 w-5" />, tint: "bg-brand-tint text-brand" },
-  { role: "manager", name: "Manager", desc: "Review jobs, performance and ask AI", icon: <BarChart3 className="h-5 w-5" />, tint: "bg-st-rev-bg text-ai" }
+  { role: "manager", name: "Manager", desc: "Review jobs, performance and ask AI", icon: <BarChart3 className="h-5 w-5" />, tint: "bg-rail text-navy" }
 ];
 
 export function LoginForm() {
@@ -77,11 +77,11 @@ export function LoginForm() {
   return (
     <div className="flex w-full max-w-[400px] flex-col gap-5">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-ink">Sign in</h2>
-        <p className="mt-1.5 text-sm text-ink-muted">Choose your role to continue. No password needed for the assessment demo.</p>
+        <h2 className="text-4xl font-extralight tracking-tight text-ink">Sign in</h2>
+        <p className="mt-2 text-[15px] font-light text-ink-muted">Choose your role to continue. No password needed for the assessment demo.</p>
       </div>
 
-      {confirmed && <p className="rounded-xl bg-brand-tint px-4 py-3 text-[13px] font-medium text-brand-ink">Email confirmed. You can sign in now.</p>}
+      {confirmed && <p className="rounded-xl bg-ok-tint px-4 py-3 text-[13px] font-medium text-ok">Email confirmed. You can sign in now.</p>}
       {error && <ErrorBanner message={error} />}
 
       <fieldset className="flex flex-col gap-2.5">
@@ -92,17 +92,17 @@ export function LoginForm() {
             <label
               key={item.role}
               className={cx(
-                "flex cursor-pointer items-center gap-3.5 rounded-xl border bg-white px-4 py-3.5 transition",
-                selected ? "border-ink shadow-[0_0_0_1px_#1A1A1A]" : "border-line-strong/70 hover:border-ink-faint"
+                "flex cursor-pointer items-center gap-3.5 rounded-3xl border bg-white px-4 py-3.5 transition",
+                selected ? "border-brand shadow-[0_0_0_1px_#2E7BAA]" : "border-line-strong hover:border-ink-faint"
               )}
             >
               <input type="radio" name="role" value={item.role} checked={selected} onChange={() => setRole(item.role)} className="sr-only" />
-              <span className={cx("flex h-10 w-10 flex-none items-center justify-center rounded-[10px]", item.tint)} aria-hidden>{item.icon}</span>
+              <span className={cx("flex h-11 w-11 flex-none items-center justify-center rounded-[14px]", item.tint)} aria-hidden>{item.icon}</span>
               <span className="flex-1">
-                <span className="block text-[15px] font-semibold text-ink">{item.name}</span>
-                <span className="mt-0.5 block text-[12.5px] text-ink-muted">{item.desc}</span>
+                <span className="block text-[15px] font-medium text-ink">{item.name}</span>
+                <span className="mt-0.5 block text-[13px] font-light text-ink-muted">{item.desc}</span>
               </span>
-              <span className={cx("h-[18px] w-[18px] flex-none rounded-full", selected ? "border-[5px] border-ink" : "border-[1.5px] border-line-input")} aria-hidden />
+              <span className={cx("h-[18px] w-[18px] flex-none rounded-full", selected ? "border-[5px] border-brand" : "border-[1.5px] border-line-input")} aria-hidden />
             </label>
           );
         })}
@@ -111,13 +111,13 @@ export function LoginForm() {
       {role === "technician" && (
         <label className="label animate-fade-up">
           Technician
-          <select value={technician} onChange={(e) => setTechnician(e.target.value)} className="h-10 rounded-[10px] border border-line-input bg-white px-3 text-sm text-ink">
+          <select value={technician} onChange={(e) => setTechnician(e.target.value)} className="field-input h-11">
             {technicianOptions.map((name) => <option key={name}>{name}</option>)}
           </select>
         </label>
       )}
 
-      <Button variant="primary" size="lg" className="h-11 rounded-[10px] text-sm" loading={busy === "role"} onClick={continueAs}>
+      <Button variant="primary" size="lg" className="h-[52px] text-[15px]" loading={busy === "role"} onClick={continueAs}>
         Continue as {role}
       </Button>
 
@@ -130,7 +130,7 @@ export function LoginForm() {
           <form onSubmit={signIn} className="mt-3 space-y-3 animate-fade-up">
             <label className="label">Email<input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-input h-10" placeholder="you@company.com" /></label>
             <label className="label">Password<input required type="password" autoComplete="current-password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="field-input h-10" /></label>
-            <Button type="submit" className="h-10 w-full" loading={busy === "email"}>Sign in</Button>
+            <Button type="submit" className="h-11 w-full" loading={busy === "email"}>Sign in</Button>
             <p className="text-center text-[13px] text-ink-muted">New here? <Link href="/signup" className="font-semibold text-ink underline-offset-2 hover:underline">Create an account</Link></p>
           </form>
         )}

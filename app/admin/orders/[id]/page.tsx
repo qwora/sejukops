@@ -55,6 +55,7 @@ function OrderDetail() {
   if (!data?.bundle) return <div className="card mx-auto max-w-[1080px]"><EmptyState title="Order not found" body={`There is no order ${id}.`} action={<LinkButton href="/admin/orders">Back to orders</LinkButton>} /></div>;
 
   const { order, completion, activity, notifications, review } = data.bundle;
+  const lastDecline = order.status === "New" && activity[0]?.action === "decline" ? activity[0] : null;
   const isAdmin = session.role === "admin";
   const canAssign = isAdmin && (order.status === "New" || order.status === "Assigned");
   const canClose = order.status === "Reviewed";
@@ -93,6 +94,7 @@ function OrderDetail() {
 
       {created && !notice && <Notice>Order {order.orderNo} created{order.assignedTechnician ? " and assigned to " + order.assignedTechnician : ""}. {order.assignedTechnician ? "Send the job to the technician on WhatsApp below." : "Assign a technician when ready."}</Notice>}
       {notice && <Notice>{notice}</Notice>}
+      {lastDecline && !notice && <Notice tone="warn">{lastDecline.actor} couldn’t take this job: “{lastDecline.note}”. Assign another technician.</Notice>}
       {actionError && <ErrorBanner message={actionError} />}
 
       <StatusStepper status={order.status} />
