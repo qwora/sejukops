@@ -26,13 +26,13 @@ export default function TechnicianJobsPage() {
                   <h2 className="mt-2 text-xl font-semibold text-ink">{job.service}</h2>
                   <p className="mt-1 text-sm text-slate-500">{job.customer}</p>
                 </div>
-                <span className={\`status-pill \${job.status === "In Progress" ? "status-progress" : "status-assigned"}\`}>{job.status}</span>
+                <span className={"status-pill " + (job.status === "In Progress" ? "status-progress" : "status-assigned")}>{job.status}</span>
               </div>
               <div className="mt-5 border-t border-slate-100 pt-4">
                 <p className="text-sm leading-6 text-slate-600">{job.address}</p>
                 <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{job.id}</p>
               </div>
-              <button className={\`mt-5 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold \${index === 0 ? "bg-ink text-white" : "border border-slate-200 text-ink"}\`}>
+              <button className={"mt-5 w-full rounded-2xl px-4 py-3.5 text-sm font-semibold " + (index === 0 ? "bg-ink text-white" : "border border-slate-200 text-ink")}>
                 {index === 0 ? "Open job" : "View details"}
               </button>
             </article>

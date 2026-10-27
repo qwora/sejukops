@@ -30,7 +30,7 @@ export function PortalShell({ children, role, active }: PortalShellProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={\`flex items-center rounded-xl px-3 py-3 text-sm transition \${active === item.label ? "bg-white/15 font-semibold text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}\`}
+              className={`flex items-center rounded-xl px-3 py-3 text-sm transition ${active === item.label ? "bg-white/15 font-semibold text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}
             >
               <span className="nav-label">{item.label}</span>
             </Link>

@@ -62,3 +62,14 @@ Reason:
 - It is safer and easier to explain.
 - Results remain deterministic and auditable.
 - It demonstrates the assessment's expected flow: interpret, query, format.
+
+## ADR-007: UI-first demo persistence
+
+Decision: Use browser localStorage for the first Admin Orders UI iteration, behind a small demo data module.
+
+Reason:
+
+- The workflow can be reviewed immediately in a branch preview without waiting for Supabase credentials.
+- The UI can be tested with create, search, filter and detail interactions.
+- The data module can later be replaced with Supabase repository functions without rewriting the page components.
+- This is temporary assessment scaffolding, not the intended production persistence layer.

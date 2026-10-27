@@ -30,7 +30,7 @@ export default function ManagerReviewsPage() {
               <div className="text-right">
                 <p className="text-xs uppercase tracking-wide text-slate-400">Final amount</p>
                 <p className="mt-1 font-semibold text-ink">{job.final}</p>
-                <p className={\`mt-1 text-xs \${job.final === job.quote ? "text-emerald-600" : "text-amber-600"}\`}>Quoted {job.quote}</p>
+                <p className={"mt-1 text-xs " + (job.final === job.quote ? "text-emerald-600" : "text-amber-600")}>Quoted {job.quote}</p>
               </div>
               <button className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Review job</button>
             </div>
