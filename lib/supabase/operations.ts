@@ -277,3 +277,43 @@ export async function reviewDbOrder(orderNo: string, status: "reviewed" | "in_pr
 
   if (reviewError) throw reviewError;
 }
+
+export type OperationsKpi = {
+  technicianName: string;
+  jobsCompleted: number;
+  totalAmount: number;
+};
+
+export type OperationsKpis = {
+  completedThisWeek: number;
+  totalAmountThisWeek: number;
+  awaitingReview: number;
+  activeOrders: number;
+  leaderboard: OperationsKpi[];
+};
+
+export async function getOperationsKpis(): Promise<OperationsKpis> {
+  const [orders, completions] = await Promise.all([listOrders(), listDbCompletions()]);
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  const day = weekStart.getDay();
+  weekStart.setDate(weekStart.getDate() - (day === 0 ? 6 : day - 1));
+
+  const weeklyCompletions = completions.filter((item) => new Date(item.completedAt) >= weekStart);
+  const byTechnician = new Map<string, OperationsKpi>();
+
+  for (const item of weeklyCompletions) {
+    const current = byTechnician.get(item.technicianName) ?? { technicianName: item.technicianName, jobsCompleted: 0, totalAmount: 0 };
+    current.jobsCompleted += 1;
+    current.totalAmount += item.finalAmount;
+    byTechnician.set(item.technicianName, current);
+  }
+
+  return {
+    completedThisWeek: weeklyCompletions.length,
+    totalAmountThisWeek: weeklyCompletions.reduce((sum, item) => sum + item.finalAmount, 0),
+    awaitingReview: orders.filter((order) => order.status === "Job Done").length,
+    activeOrders: orders.filter((order) => !["Reviewed", "Closed"].includes(order.status)).length,
+    leaderboard: [...byTechnician.values()].sort((a, b) => b.jobsCompleted - a.jobsCompleted || b.totalAmount - a.totalAmount)
+  };
+}
