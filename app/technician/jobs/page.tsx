@@ -1,100 +1,118 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { PortalShell } from "@/components/portal-shell";
-import { ensureDemoData, listOrders } from "@/lib/supabase/operations";
-import type { ServiceOrder } from "@/lib/order-types";
+import { ClipboardList } from "lucide-react";
+import { MobileShell } from "@/components/shell/mobile-shell";
+import { EmptyState, ErrorBanner, Skeleton } from "@/components/ui/primitives";
+import { JobRow, NextJobCard } from "@/components/technician/job-bits";
+import { listCompletions, listOrders } from "@/lib/data";
+import { useLoad } from "@/lib/use-load";
+import { useSession } from "@/lib/session";
+import { formatDate, isToday, money, startOfMyDay } from "@/lib/format";
 
-const CURRENT_TECHNICIAN = "Ali";
-const historyStatuses = ["Job Done", "Reviewed", "Closed"];
-
-function statusClass(status: ServiceOrder["status"]) {
-  if (status === "In Progress") return "status-progress";
-  if (status === "Job Done" || status === "Closed") return "status-done";
-  if (status === "Reviewed") return "status-review";
-  return "status-assigned";
-}
-
-function JobCard({ job, index }: { job: ServiceOrder; index: number }) {
-  const completed = historyStatuses.includes(job.status);
+export default function TechnicianJobsPage() {
   return (
-    <article className="rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-sea">{index === 0 ? "10:00 AM" : "2:30 PM"}</p>
-          <h2 className="mt-2 text-xl font-semibold text-ink">{job.serviceType}</h2>
-          <p className="mt-1 text-sm text-slate-500">{job.customerName}</p>
-        </div>
-        <span className={"status-pill " + statusClass(job.status)}>{job.status}</span>
-      </div>
-      <div className="mt-5 border-t border-slate-100 pt-4">
-        <p className="text-sm leading-6 text-slate-600">{job.address}</p>
-        <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{job.orderNo}</p>
-      </div>
-      <Link href={completed ? "/technician/jobs/" + job.orderNo + "?completed=1" : "/technician/jobs/" + job.orderNo} className={"mt-5 block w-full rounded-2xl px-4 py-3.5 text-center text-sm font-semibold " + (index === 0 && !completed ? "bg-ink text-white" : "border border-slate-200 text-ink")}>
-        {completed ? "View service record" : index === 0 ? "Open job" : "View details"}
-      </Link>
-    </article>
+    <MobileShell>
+      <Today />
+    </MobileShell>
   );
 }
 
-export default function TechnicianJobsPage() {
-  const [jobs, setJobs] = useState<ServiceOrder[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+function greeting() {
+  const hour = Number(new Date().toLocaleString("en-GB", { timeZone: "Asia/Kuala_Lumpur", hour: "2-digit", hour12: false }));
+  return hour < 12 ? "Selamat pagi," : hour < 18 ? "Selamat petang," : "Selamat malam,";
+}
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        await ensureDemoData();
-        const orders = await listOrders();
-        if (active) setJobs(orders.filter((order) => order.assignedTechnician === CURRENT_TECHNICIAN));
-      } catch (loadError) {
-        if (active) setError(loadError instanceof Error ? loadError.message : "Could not load assigned jobs.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    return () => { active = false; };
-  }, []);
+function Today() {
+  const session = useSession();
+  const me = session.technicianName;
+  const { data, error, loading, reload } = useLoad(async () => {
+    const [orders, completions] = await Promise.all([listOrders(), listCompletions(startOfMyDay())]);
+    return { orders, completions };
+  }, [me]);
 
-  const activeJobs = jobs.filter((job) => !historyStatuses.includes(job.status));
-  const history = jobs.filter((job) => historyStatuses.includes(job.status));
+  const mine = (data?.orders ?? []).filter((o) => o.assignedTechnician === me);
+  const byTime = (a: { scheduledAt: string | null }, b: { scheduledAt: string | null }) => (a.scheduledAt ?? "9").localeCompare(b.scheduledAt ?? "9");
+  const open = mine.filter((o) => o.status === "Assigned" || o.status === "In Progress").sort((a, b) => (a.status === "In Progress" ? -1 : b.status === "In Progress" ? 1 : byTime(a, b)));
+  const todays = mine.filter((o) => isToday(o.scheduledAt) || (open.includes(o) && !o.scheduledAt)).sort(byTime);
+  const upcoming = open.filter((o) => !todays.includes(o));
+  const myToday = (data?.completions ?? []).filter((c) => c.technicianName === me);
+  const collected = myToday.reduce((sum, c) => sum + c.paymentAmount, 0);
+  const doneToday = myToday.length;
+  const totalToday = Math.max(todays.length, doneToday);
+  const next = open[0];
 
   return (
-    <PortalShell role="Technician" active="My jobs">
-      <main className="mx-auto max-w-xl px-5 py-8">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-sea">Technician dashboard</p>
-            <p className="mt-2 text-sm text-slate-500">{new Date().toLocaleDateString("en-MY", { weekday: "long", day: "numeric", month: "long" })}</p>
-            <h1 className="mt-1 text-3xl font-semibold tracking-tight text-ink">Good morning, {CURRENT_TECHNICIAN}</h1>
+    <div>
+      <header className="bg-brand px-5 pb-16 pt-6 text-white">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-base font-bold">{(me ?? "?")[0]}</span>
+          <div className="flex-1">
+            <p className="text-[13px] text-white/80">{greeting()}</p>
+            <h1 className="text-lg font-bold">{me ?? session.name}</h1>
           </div>
-          <span className="rounded-full bg-mint px-3 py-1.5 text-xs font-semibold text-emerald-800">{activeJobs.length} active jobs</span>
+          <span className="rounded-full bg-black/20 px-3 py-1.5 text-xs font-semibold">{formatDate(new Date().toISOString(), { weekday: "short", day: "numeric", month: "short" })}</span>
         </div>
+      </header>
 
-        {error && <div role="alert" className="mt-6 rounded-xl bg-rose px-4 py-3 text-sm text-red-800">Could not load jobs: {error}</div>}
-        {loading && <p className="mt-8 text-sm text-slate-500">Loading your jobs...</p>}
+      <div className="relative mx-4 -mt-12 grid grid-cols-3 rounded-2xl bg-white p-4 text-center shadow-lift">
+        <div>
+          <div className="num text-[22px] font-extrabold text-ink">{doneToday}<span className="text-[15px] font-semibold text-ink-faint">/{totalToday}</span></div>
+          <div className="mt-0.5 text-[11.5px] text-ink-muted">Done today</div>
+        </div>
+        <div className="border-x border-[#F1F1F1]">
+          <div className="num text-[22px] font-extrabold text-ink">{money(collected, 0)}</div>
+          <div className="mt-0.5 text-[11.5px] text-ink-muted">Collected</div>
+        </div>
+        <div>
+          <div className="num text-[22px] font-extrabold text-ink">{open.length}</div>
+          <div className="mt-0.5 text-[11.5px] text-ink-muted">Open jobs</div>
+        </div>
+      </div>
 
-        {!loading && activeJobs.length > 0 && (
-          <section className="mt-8">
-            <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Today’s route</h2><span className="text-xs text-slate-400">{activeJobs.length} active</span></div>
-            <div className="space-y-4">{activeJobs.map((job, index) => <JobCard key={job.id} job={job} index={index} />)}</div>
-          </section>
+      <div className="flex flex-col gap-3 px-4 pt-5">
+        {session.mode === "account" && !me && (
+          <p className="rounded-xl bg-warn-tint px-4 py-3 text-[13px] text-warn">Your account isn’t linked to a technician yet. Ask an admin to link it.</p>
+        )}
+        {error && <ErrorBanner message={"Could not load jobs: " + error} onRetry={() => reload()} />}
+        {loading && !data && (
+          <>
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-44 w-full rounded-2xl" />
+            <Skeleton className="h-40 w-full rounded-2xl" />
+          </>
         )}
 
-        {!loading && history.length > 0 && (
-          <section className="mt-10">
-            <div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Completion history</h2><span className="text-xs text-slate-400">{history.length} recorded</span></div>
-            <div className="space-y-4">{history.map((job, index) => <JobCard key={job.id} job={job} index={index} />)}</div>
-          </section>
-        )}
+        {data && (
+          <>
+            {next ? (
+              <>
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-[17px] font-bold text-ink">{next.status === "In Progress" ? "Current job" : "Next job"}</h2>
+                  <span className="text-xs text-ink-muted">{open.length} open</span>
+                </div>
+                <NextJobCard job={next} />
+              </>
+            ) : (
+              <div className="rounded-2xl bg-white">
+                <EmptyState icon={<ClipboardList className="h-5 w-5" />} title="No open jobs" body="New jobs from the admin team will appear here." />
+              </div>
+            )}
 
-        {!loading && jobs.length === 0 && !error && <div className="mt-8 rounded-2xl border border-dashed border-slate-300 px-6 py-12 text-center text-sm text-slate-500">No jobs are assigned to you.</div>}
-      </main>
-    </PortalShell>
+            {todays.length > 0 && (
+              <>
+                <h2 className="mt-2 text-[15px] font-bold text-ink">Today&apos;s jobs</h2>
+                <div className="rounded-2xl bg-white px-4">{todays.map((job) => <JobRow key={job.id} job={job} />)}</div>
+              </>
+            )}
+            {upcoming.length > 0 && (
+              <>
+                <h2 className="mt-2 text-[15px] font-bold text-ink">Upcoming</h2>
+                <div className="rounded-2xl bg-white px-4">{upcoming.map((job) => <JobRow key={job.id} job={job} />)}</div>
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 }

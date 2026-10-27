@@ -1,57 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Maximize2, Sparkles, X } from "lucide-react";
+import { AssistantChat } from "@/components/assistant/assistant-chat";
 
-type QueryResponse = {
-  answer: string;
-  supported: boolean;
-  queryType: string;
-  data?: unknown;
-};
-
-const suggestions = [
-  "How many jobs were completed today?",
-  "Which technician completed the most jobs this week?",
-  "Which jobs are waiting for manager review?"
-];
-
+/** Sidekick-style launcher: bottom-right button → right-side panel (full screen on mobile). */
 export function OperationsAssistant() {
   const [open, setOpen] = useState(false);
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [loading, setLoading] = useState(false);
+  const pathname = usePathname();
 
-  async function ask(value = question) {
-    const trimmed = value.trim();
-    if (!trimmed || loading) return;
-    setQuestion(trimmed);
-    setLoading(true);
-    setAnswer("");
-    try {
-      const response = await fetch("/api/operations/query", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: trimmed }) });
-      const result = await response.json() as QueryResponse;
-      setAnswer(result.answer || "No answer was returned.");
-    } catch {
-      setAnswer("The operations assistant is temporarily unavailable.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    if (!open) return;
+    const esc = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [open]);
+
+  if (pathname.startsWith("/manager/assistant")) return null;
 
   return (
     <>
-      <button aria-label="Open operations assistant" onClick={() => setOpen(true)} className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-ink text-xl text-white shadow-lg hover:bg-slate-800">✦</button>
-      {open && <div className="fixed inset-0 z-50 bg-ink/20" onClick={() => setOpen(false)}>
-        <aside role="dialog" aria-label="Operations assistant" onClick={(event) => event.stopPropagation()} className="absolute bottom-0 right-0 flex h-[min(680px,100vh)] w-full flex-col bg-white shadow-2xl sm:bottom-5 sm:right-5 sm:h-[min(680px,calc(100vh-40px))] sm:w-[420px] sm:rounded-3xl">
-          <header className="flex items-start justify-between border-b border-slate-200 p-5"><div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-sea">Sidekick</p><h2 className="mt-1 text-lg font-semibold text-ink">Operations assistant</h2><p className="mt-1 text-xs text-slate-500">Answers use controlled service records.</p></div><button aria-label="Close operations assistant" onClick={() => setOpen(false)} className="text-2xl leading-none text-slate-400">×</button></header>
-          <div className="flex-1 space-y-4 overflow-y-auto p-5">
-            {!answer && !loading && <><p className="text-sm text-slate-600">Ask about jobs, technicians or the review queue.</p><div className="space-y-2">{suggestions.map((item) => <button key={item} onClick={() => ask(item)} className="block w-full rounded-xl border border-slate-200 px-3 py-3 text-left text-sm text-slate-700 hover:bg-slate-50">{item}</button>)}</div></>}
-            {loading && <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">Checking service records...</div>}
-            {answer && <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700 whitespace-pre-line">{answer}</div>}
-          </div>
-          <form onSubmit={(event) => { event.preventDefault(); ask(); }} className="border-t border-slate-200 p-4"><div className="flex gap-2"><input value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask an operations question..." className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-sea" /><button disabled={loading} className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">Ask</button></div></form>
-        </aside>
-      </div>}
+      {!open && (
+        <button
+          aria-label="Open operations assistant"
+          onClick={() => setOpen(true)}
+          className="fixed bottom-5 right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-ink pl-4 pr-5 text-[13px] font-semibold text-white shadow-[0_8px_24px_rgba(0,0,0,.25)] transition hover:-translate-y-0.5"
+        >
+          <Sparkles className="h-4 w-4 text-brand-glow" aria-hidden />
+          Ask Ops
+        </button>
+      )}
+      {open && (
+        <div className="fixed inset-0 z-50 bg-black/20 sm:bg-transparent" onClick={() => setOpen(false)}>
+          <aside
+            role="dialog"
+            aria-label="Operations assistant"
+            onClick={(event) => event.stopPropagation()}
+            className="absolute inset-0 flex flex-col bg-canvas shadow-2xl animate-fade-up sm:inset-auto sm:bottom-4 sm:right-4 sm:top-[72px] sm:w-[420px] sm:rounded-2xl sm:ring-1 sm:ring-black/5"
+          >
+            <header className="flex items-center gap-2.5 border-b border-line bg-white px-4 py-3 sm:rounded-t-2xl">
+              <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-ink"><Sparkles className="h-4 w-4 text-brand-glow" aria-hidden /></span>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-ink">Ops assistant</p>
+                <p className="text-[11.5px] text-ink-muted">Read-only · answers from controlled queries</p>
+              </div>
+              <Link href="/manager/assistant" aria-label="Open full page" className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-black/5"><Maximize2 className="h-4 w-4" /></Link>
+              <button aria-label="Close" onClick={() => setOpen(false)} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-muted hover:bg-black/5"><X className="h-4 w-4" /></button>
+            </header>
+            <div className="min-h-0 flex-1"><AssistantChat compact /></div>
+          </aside>
+        </div>
+      )}
     </>
   );
 }

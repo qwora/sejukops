@@ -1,105 +1,148 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { PortalShell } from "@/components/portal-shell";
-import { closeDbOrder, ensureDemoData, listDbCompletions, listOrders, reviewDbOrder } from "@/lib/supabase/operations";
-import type { ServiceCompletion } from "@/lib/service-completion";
-import type { ServiceOrder } from "@/lib/order-types";
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import { ChevronRight, ClipboardCheck, ImageOff, Sparkles } from "lucide-react";
+import { DesktopShell, PageHeader } from "@/components/shell/desktop-shell";
+import { Avatar, Badge, Button, EmptyState, ErrorBanner, Notice, PageLoading, Stat, StatusPill } from "@/components/ui/primitives";
+import { listCompletions, listOrders } from "@/lib/data";
+import { apiPost } from "@/lib/api";
+import { useLoad } from "@/lib/use-load";
+import { formatDateTime, money, timeAgo } from "@/lib/format";
+import { supervisorFlags } from "@/lib/supervisor";
 
-export default function ManagerReviewsPage() {
-  const [orders, setOrders] = useState<ServiceOrder[]>([]);
-  const [completions, setCompletions] = useState<ServiceCompletion[]>([]);
+export default function ReviewQueuePage() {
+  return (
+    <DesktopShell roles={["manager", "admin"]}>
+      <Queue />
+    </DesktopShell>
+  );
+}
+
+function Queue() {
+  const { data, error, loading, reload } = useLoad(async () => {
+    const [orders, completions] = await Promise.all([listOrders(), listCompletions()]);
+    return { orders, completions };
+  });
+  const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [busyOrder, setBusyOrder] = useState("");
+  const [actionError, setActionError] = useState("");
 
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      try {
-        await ensureDemoData();
-        const [loadedOrders, loadedCompletions] = await Promise.all([listOrders(), listDbCompletions()]);
-        if (active) { setOrders(loadedOrders); setCompletions(loadedCompletions); }
-      } catch (loadError) {
-        if (active) setError(loadError instanceof Error ? loadError.message : "Could not load the review queue.");
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    load();
-    return () => { active = false; };
-  }, []);
+  const rows = useMemo(() => {
+    if (!data) return { review: [], approved: [] };
+    const withCompletion = (status: string) =>
+      data.orders
+        .filter((o) => o.status === status)
+        .map((order) => {
+          const completion = data.completions.find((c) => c.orderNo === order.orderNo) ?? null;
+          return { order, completion, flags: supervisorFlags(order, completion) };
+        })
+        .sort((a, b) => (a.completion?.completedAt ?? "").localeCompare(b.completion?.completedAt ?? ""));
+    return { review: withCompletion("Job Done"), approved: withCompletion("Reviewed") };
+  }, [data]);
 
-  const reviewJobs = useMemo(() => orders.filter((order) => order.status === "Job Done"), [orders]);
-  const approvedJobs = useMemo(() => orders.filter((order) => order.status === "Reviewed"), [orders]);
-  function completionFor(orderNo: string) { return completions.find((item) => item.orderNo === orderNo); }
+  const waitingValue = rows.review.reduce((sum, r) => sum + (r.completion?.finalAmount ?? 0), 0);
+  const flagged = rows.review.filter((r) => r.flags.length).length;
+  const oldest = rows.review[0]?.completion?.completedAt;
 
-  async function updateReview(orderNo: string, status: "Reviewed" | "In Progress") {
-    setError("");
-    setBusyOrder(orderNo);
+  async function close(orderNo: string) {
+    setBusy(orderNo);
+    setActionError("");
     try {
-      await reviewDbOrder(orderNo, status === "Reviewed" ? "reviewed" : "in_progress");
-      setOrders((current) => current.map((order) => order.orderNo === orderNo ? { ...order, status } : order));
-      setNotice(status === "Reviewed" ? orderNo + " approved and ready to close." : orderNo + " returned to the technician.");
-    } catch (reviewError) {
-      setError(reviewError instanceof Error ? reviewError.message : "Could not update this review.");
+      await apiPost(`/api/orders/${orderNo}/action`, { action: "close" });
+      setNotice(orderNo + " closed.");
+      await reload(true);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Could not close.");
     } finally {
-      setBusyOrder("");
+      setBusy("");
     }
-  }
-
-  async function closeOrder(orderNo: string) {
-    setError("");
-    setBusyOrder(orderNo);
-    try {
-      await closeDbOrder(orderNo);
-      setOrders((current) => current.map((order) => order.orderNo === orderNo ? { ...order, status: "Closed" } : order));
-      setNotice(orderNo + " closed successfully.");
-    } catch (closeError) {
-      setError(closeError instanceof Error ? closeError.message : "Could not close this order.");
-    } finally {
-      setBusyOrder("");
-    }
-  }
-
-  function renderCompletion(job: ServiceOrder, approved = false) {
-    const completion = completionFor(job.orderNo);
-    const finalAmount = completion?.finalAmount ?? job.quotedPrice;
-    const fileCount = completion?.fileNames.length ?? 0;
-    const technicianName = completion?.technicianName || job.assignedTechnician || "Technician";
-    return (
-      <article key={job.orderNo} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft">
-        <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
-          <div>
-            <div className="flex flex-wrap items-center gap-3"><span className="font-semibold text-sea">{job.orderNo}</span><span className={"status-pill " + (approved ? "status-done" : "status-review")}>{approved ? "Approved" : "Needs review"}</span></div>
-            <h2 className="mt-3 text-lg font-semibold text-ink">{job.serviceType} · {job.customerName}</h2>
-            <p className="mt-1 text-sm text-slate-500">Completed by {technicianName} · {fileCount} uploaded files</p>
-            {completion && <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{completion.workDone}</p>}
-          </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="text-left sm:text-right"><p className="text-xs uppercase tracking-wide text-slate-400">Final amount</p><p className="mt-1 font-semibold text-ink">RM{finalAmount.toFixed(2)}</p><p className={"mt-1 text-xs " + (finalAmount === job.quotedPrice ? "text-emerald-600" : "text-amber-600")}>Quoted RM{job.quotedPrice.toFixed(2)}</p></div>
-            <div className="flex gap-2">
-              {approved ? <button disabled={busyOrder === job.orderNo} onClick={() => closeOrder(job.orderNo)} className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">{busyOrder === job.orderNo ? "Closing..." : "Close order"}</button> : <><button disabled={busyOrder === job.orderNo} onClick={() => updateReview(job.orderNo, "In Progress")} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 disabled:opacity-60">Return</button><button disabled={busyOrder === job.orderNo} onClick={() => updateReview(job.orderNo, "Reviewed")} className="rounded-xl bg-ink px-4 py-3 text-sm font-semibold text-white disabled:opacity-60">Approve</button></>}
-            </div>
-          </div>
-        </div>
-      </article>
-    );
   }
 
   return (
-    <PortalShell role="Manager" active="Review queue">
-      <header className="border-b border-slate-200 bg-white px-6 py-5 md:px-10"><p className="text-sm font-semibold uppercase tracking-wide text-sea">Manager workspace</p><h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">Review queue</h1><p className="mt-2 text-sm text-slate-500">Approve completed work, return corrections, then close approved orders.</p></header>
-      <section className="space-y-8 px-6 py-8 md:px-10">
-        {notice && <div role="status" className="rounded-xl bg-mint px-4 py-3 text-sm font-medium text-emerald-900">{notice}</div>}
-        {error && <div role="alert" className="rounded-xl bg-rose px-4 py-3 text-sm text-red-800">Could not update the workflow: {error}</div>}
-        {loading && <div className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-sm text-slate-500">Loading completed jobs...</div>}
+    <div className="mx-auto flex max-w-[1080px] flex-col gap-4">
+      <PageHeader title="Review queue" subtitle="Approve completed work, return corrections, then close." />
+      {error && <ErrorBanner message={"Could not load the queue: " + error} onRetry={() => reload()} />}
+      {notice && <Notice>{notice}</Notice>}
+      {actionError && <ErrorBanner message={actionError} />}
+      {loading && !data && <PageLoading />}
 
-        {!loading && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Needs review</h2><span className="text-xs text-slate-400">{reviewJobs.length} jobs</span></div>{reviewJobs.length === 0 ? <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500">No completed jobs are waiting for review.</div> : <div className="space-y-4">{reviewJobs.map((job) => renderCompletion(job))}</div>}</section>}
+      {data && (
+        <>
+          <div className="card grid grid-cols-2 gap-px overflow-hidden bg-[#F1F1F1] md:grid-cols-4 [&>*]:bg-white">
+            <Stat label="Waiting for review" value={rows.review.length} />
+            <Stat label="Value waiting" value={money(waitingValue, 0)} />
+            <Stat label="Flagged by supervisor" value={flagged} tone={flagged ? "danger" : undefined} />
+            <Stat label="Oldest waiting" value={oldest ? timeAgo(oldest) : "—"} />
+          </div>
 
-        {!loading && approvedJobs.length > 0 && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Approved · ready to close</h2><span className="text-xs text-slate-400">{approvedJobs.length} jobs</span></div><div className="space-y-4">{approvedJobs.map((job) => renderCompletion(job, true))}</div></section>}
-      </section>
-    </PortalShell>
+          <section className="card overflow-hidden">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <h2 className="text-sm font-semibold text-ink">Needs review</h2>
+              <span className="text-xs text-ink-muted">Oldest first</span>
+            </div>
+            {rows.review.length === 0 ? (
+              <EmptyState icon={<ClipboardCheck className="h-5 w-5" />} title="All caught up" body="No completed jobs are waiting for review." />
+            ) : (
+              <ul>
+                {rows.review.map(({ order, completion, flags }) => {
+                  const diff = (completion?.finalAmount ?? order.quotedPrice) - order.quotedPrice;
+                  return (
+                    <li key={order.id}>
+                      <Link href={"/manager/reviews/" + order.orderNo} className="group flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-[#F1F1F1] px-4 py-3.5 hover:bg-[#FAFAFA]">
+                        <Avatar name={order.assignedTechnician} size={32} />
+                        <div className="min-w-[220px] flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="num text-[13px] font-semibold text-ink">{order.orderNo}</span>
+                            <span className="text-[13px] text-ink-2">{order.serviceType} · {order.customerName}</span>
+                          </div>
+                          <div className="mt-0.5 text-xs text-ink-muted">
+                            {order.assignedTechnician} · done {completion ? formatDateTime(completion.completedAt) : "—"} · {completion?.files.length ?? 0} files
+                          </div>
+                          {flags.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {flags.map((flag) => (
+                                <Badge key={flag.code} tone={flag.level === "high" ? "danger" : flag.level === "medium" ? "warn" : "neutral"}>
+                                  {flag.code === "no_evidence" ? <ImageOff className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}{flag.title}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="num text-sm font-bold text-ink">{money(completion?.finalAmount ?? order.quotedPrice)}</div>
+                          <div className={"num text-xs " + (diff > 0 ? "font-semibold text-warn" : "text-ink-muted")}>{diff > 0 ? "+" + money(diff, 0) + " vs quote" : "matches quote"}</div>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-ink-faint group-hover:text-ink" aria-hidden />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+
+          {rows.approved.length > 0 && (
+            <section className="card overflow-hidden">
+              <div className="flex items-center justify-between border-b border-line px-4 py-3">
+                <h2 className="text-sm font-semibold text-ink">Approved · ready to close</h2>
+                <span className="text-xs text-ink-muted">{rows.approved.length} jobs</span>
+              </div>
+              <ul>
+                {rows.approved.map(({ order, completion }) => (
+                  <li key={order.id} className="flex flex-wrap items-center gap-3 border-b border-[#F1F1F1] px-4 py-3">
+                    <Link href={"/manager/reviews/" + order.orderNo} className="num text-[13px] font-semibold text-ink hover:underline">{order.orderNo}</Link>
+                    <span className="flex-1 text-[13px] text-ink-2">{order.serviceType} · {order.assignedTechnician}</span>
+                    <StatusPill status={order.status} />
+                    <span className="num w-24 text-right text-[13px] font-semibold">{money(completion?.finalAmount ?? order.quotedPrice)}</span>
+                    <Button size="sm" variant="primary" loading={busy === order.orderNo} onClick={() => close(order.orderNo)}>Close</Button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </>
+      )}
+    </div>
   );
 }

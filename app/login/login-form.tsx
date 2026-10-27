@@ -1,67 +1,142 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { roleDestinations, roleLabel, signInWithPassword } from "@/lib/supabase/auth";
+import { BarChart3, ChevronDown, ClipboardList, Wrench } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { roleDestinations, signInWithPassword, type AppRole } from "@/lib/supabase/auth";
+import { clearDemo, startDemo, useSession } from "@/lib/session";
+import { technicianOptions } from "@/lib/order-types";
+import { Button, cx, ErrorBanner } from "@/components/ui/primitives";
 
-const demoRoles = [
-  { name: "Admin", destination: "/admin/orders", description: "Manage orders and assignments" },
-  { name: "Technician", destination: "/technician/jobs", description: "Complete assigned field jobs" },
-  { name: "Manager", destination: "/manager/reviews", description: "Review jobs and operations" }
+const ROLES: Array<{ role: AppRole; name: string; desc: string; icon: React.ReactNode; tint: string }> = [
+  { role: "admin", name: "Admin", desc: "Create orders and assign technicians", icon: <ClipboardList className="h-5 w-5" />, tint: "bg-[#F1F1F1] text-ink" },
+  { role: "technician", name: "Technician", desc: "See today’s jobs and complete service", icon: <Wrench className="h-5 w-5" />, tint: "bg-brand-tint text-brand" },
+  { role: "manager", name: "Manager", desc: "Review jobs, performance and ask AI", icon: <BarChart3 className="h-5 w-5" />, tint: "bg-st-rev-bg text-ai" }
 ];
 
 export function LoginForm() {
   const router = useRouter();
+  const session = useSession();
+  const [role, setRole] = useState<AppRole>("admin");
+  const [technician, setTechnician] = useState("Ali");
+  const [showEmail, setShowEmail] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [demoRole, setDemoRole] = useState("Admin");
+  const [busy, setBusy] = useState<"" | "role" | "email">("");
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
-  async function signIn(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
+  useEffect(() => {
+    setConfirmed(new URLSearchParams(window.location.search).has("confirmed"));
+  }, []);
+
+  async function continueAs() {
+    setBusy("role");
     setError("");
-    setNotice("");
     try {
-      const profile = await signInWithPassword(email.trim(), password);
-      router.push(roleDestinations[profile.role]);
-    } catch (signInError) {
-      setError(signInError instanceof Error ? signInError.message : "Could not sign in.");
-    } finally {
-      setBusy(false);
+      await supabase.auth.signOut().catch(() => undefined);
+      clearDemo();
+      // Reviewer accounts (real Supabase Auth) when configured; the Ali account is the technician reviewer.
+      const useAccount = role !== "technician" || technician === "Ali";
+      if (useAccount) {
+        const response = await fetch("/api/auth/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) });
+        if (response.ok) {
+          const tokens = (await response.json()) as { access_token: string; refresh_token: string };
+          await supabase.auth.setSession(tokens);
+          await session.refresh();
+          router.push(roleDestinations[role]);
+          return;
+        }
+      }
+      startDemo(role, role === "technician" ? technician : undefined);
+      await session.refresh();
+      router.push(roleDestinations[role]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not open the workspace.");
+      setBusy("");
     }
   }
 
-  function continueDemo() {
-    const selected = demoRoles.find((item) => item.name === demoRole);
-    if (typeof window !== "undefined") window.sessionStorage.setItem("sejuksejuk.demo.role", demoRole.toLowerCase());
-    router.push(selected?.destination ?? "/admin/orders");
+  async function signIn(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy("email");
+    setError("");
+    try {
+      clearDemo();
+      const profile = await signInWithPassword(email.trim(), password);
+      await session.refresh();
+      router.push(roleDestinations[profile.role]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sign in.");
+      setBusy("");
+    }
   }
 
   return (
-    <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-soft">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sea">Workspace sign in</p>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight text-ink">Enter your workspace</h1>
-      <p className="mt-3 leading-6 text-slate-500">Use your Supabase account to continue. For assessment review, demo access remains available below.</p>
+    <div className="flex w-full max-w-[400px] flex-col gap-5">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-ink">Sign in</h2>
+        <p className="mt-1.5 text-sm text-ink-muted">Choose your role to continue. No password needed for the assessment demo.</p>
+      </div>
 
-      {error && <div role="alert" className="mt-6 rounded-xl bg-rose px-4 py-3 text-sm text-red-800">{error}</div>}
-      {notice && <div role="status" className="mt-6 rounded-xl bg-mint px-4 py-3 text-sm text-emerald-900">{notice}</div>}
+      {confirmed && <p className="rounded-xl bg-brand-tint px-4 py-3 text-[13px] font-medium text-brand-ink">Email confirmed. You can sign in now.</p>}
+      {error && <ErrorBanner message={error} />}
 
-      <form onSubmit={signIn} className="mt-8 space-y-4">
-        <label className="block text-sm font-semibold text-ink">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sea focus:ring-2 focus:ring-blue-100" placeholder="you@company.com" /></label>
-        <label className="block text-sm font-semibold text-ink">Password<input required type="password" minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none focus:border-sea focus:ring-2 focus:ring-blue-100" placeholder="••••••••" /></label>
-        <button disabled={busy} className="w-full rounded-xl bg-ink px-4 py-3.5 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">{busy ? "Signing in..." : "Sign in"}</button>
-      </form>
+      <fieldset className="flex flex-col gap-2.5">
+        <legend className="sr-only">Role</legend>
+        {ROLES.map((item) => {
+          const selected = role === item.role;
+          return (
+            <label
+              key={item.role}
+              className={cx(
+                "flex cursor-pointer items-center gap-3.5 rounded-xl border bg-white px-4 py-3.5 transition",
+                selected ? "border-ink shadow-[0_0_0_1px_#1A1A1A]" : "border-line-strong/70 hover:border-ink-faint"
+              )}
+            >
+              <input type="radio" name="role" value={item.role} checked={selected} onChange={() => setRole(item.role)} className="sr-only" />
+              <span className={cx("flex h-10 w-10 flex-none items-center justify-center rounded-[10px]", item.tint)} aria-hidden>{item.icon}</span>
+              <span className="flex-1">
+                <span className="block text-[15px] font-semibold text-ink">{item.name}</span>
+                <span className="mt-0.5 block text-[12.5px] text-ink-muted">{item.desc}</span>
+              </span>
+              <span className={cx("h-[18px] w-[18px] flex-none rounded-full", selected ? "border-[5px] border-ink" : "border-[1.5px] border-line-input")} aria-hidden />
+            </label>
+          );
+        })}
+      </fieldset>
 
-      <div className="mt-6 text-center text-sm text-slate-500">Need an account? <Link href="/signup" className="font-semibold text-sea hover:underline">Create one</Link></div>
+      {role === "technician" && (
+        <label className="label animate-fade-up">
+          Technician
+          <select value={technician} onChange={(e) => setTechnician(e.target.value)} className="h-10 rounded-[10px] border border-line-input bg-white px-3 text-sm text-ink">
+            {technicianOptions.map((name) => <option key={name}>{name}</option>)}
+          </select>
+        </label>
+      )}
 
-      <div className="my-7 flex items-center gap-3 text-xs uppercase tracking-wide text-slate-400"><span className="h-px flex-1 bg-slate-200" />or demo access<span className="h-px flex-1 bg-slate-200" /></div>
-      <label className="block text-sm font-semibold text-ink">Preview as<select value={demoRole} onChange={(event) => setDemoRole(event.target.value)} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-ink outline-none focus:border-sea focus:ring-2">{demoRoles.map((item) => <option key={item.name}>{item.name}</option>)}</select></label>
-      <p className="mt-3 text-sm text-slate-500">{demoRoles.find((item) => item.name === demoRole)?.description}</p>
-      <button onClick={continueDemo} className="mt-5 w-full rounded-xl border border-slate-200 px-4 py-3.5 font-semibold text-ink transition hover:bg-slate-50">Continue in demo mode</button>
+      <Button variant="primary" size="lg" className="h-11 rounded-[10px] text-sm" loading={busy === "role"} onClick={continueAs}>
+        Continue as {role}
+      </Button>
+
+      <div className="border-t border-line pt-4">
+        <button onClick={() => setShowEmail((v) => !v)} aria-expanded={showEmail} className="flex w-full items-center justify-between text-[13px] font-semibold text-ink-2">
+          Sign in with email
+          <ChevronDown className={cx("h-4 w-4 transition", showEmail && "rotate-180")} aria-hidden />
+        </button>
+        {showEmail && (
+          <form onSubmit={signIn} className="mt-3 space-y-3 animate-fade-up">
+            <label className="label">Email<input required type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="field-input h-10" placeholder="you@company.com" /></label>
+            <label className="label">Password<input required type="password" autoComplete="current-password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="field-input h-10" /></label>
+            <Button type="submit" className="h-10 w-full" loading={busy === "email"}>Sign in</Button>
+            <p className="text-center text-[13px] text-ink-muted">New here? <Link href="/signup" className="font-semibold text-ink underline-offset-2 hover:underline">Create an account</Link></p>
+          </form>
+        )}
+      </div>
+
+      <p className="text-center text-xs text-ink-faint">Every action is logged with your name and time.</p>
     </div>
   );
 }
