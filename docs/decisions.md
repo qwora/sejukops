@@ -73,3 +73,10 @@ Reason:
 - The UI can be tested with create, search, filter and detail interactions.
 - The data module can later be replaced with Supabase repository functions without rewriting the page components.
 - This is temporary assessment scaffolding, not the intended production persistence layer.
+
+
+## Technical workflow and AI query boundary
+
+The workflow now exposes explicit transition functions for `Assigned → In Progress`, `Job Done → Reviewed`, `Reviewed → Closed`, and review return. The UI calls these functions instead of changing status locally.
+
+The operations assistant uses `POST /api/operations/query`. The route classifies a small supported query set, retrieves only the matching Supabase records, and returns a deterministic answer. If `OPENAI_API_KEY` is configured server-side, the same structured result may be passed to the model for wording only. The model never receives unrestricted database access, and the deterministic response remains the fallback when no AI key is configured.

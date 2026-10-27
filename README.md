@@ -55,6 +55,7 @@ Current implementation:
 - Phase 3: mobile technician jobs, evidence upload, completion success and history
 - Phase 4: manager review queue and manual WhatsApp deep links
 - Phase 5: data-backed weekly KPI dashboard and technician leaderboard
+- Phase 6: controlled operations query endpoint and manager Sidekick panel
 
 See plan.md for the complete implementation plan.
 

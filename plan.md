@@ -397,7 +397,9 @@ Deliverables:
 
 Metrics must be derived from database records, not hardcoded values.
 
-### Phase 6 — AI operations assistant
+### Phase 6 — AI operations assistant (implemented)
+
+The first controlled assistant slice is now live. `POST /api/operations/query` supports a defined set of operational questions, queries only matching Supabase records, returns deterministic answers without requiring an AI key, and optionally uses a server-side `OPENAI_API_KEY` for wording only. The manager portal exposes the assistant through a Sidekick-style panel.
 
 Deliverables:
 

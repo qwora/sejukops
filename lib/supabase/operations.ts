@@ -252,6 +252,35 @@ export async function listDbCompletions(): Promise<ServiceCompletion[]> {
   }));
 }
 
+
+export async function startDbOrder(orderNo: string) {
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("id,status")
+    .eq("order_no", orderNo)
+    .single();
+
+  if (orderError) throw orderError;
+  if (order.status !== "assigned") throw new Error("Only an assigned job can be started.");
+
+  const { error } = await supabase.from("orders").update({ status: "in_progress" }).eq("id", order.id);
+  if (error) throw error;
+}
+
+export async function closeDbOrder(orderNo: string) {
+  const { data: order, error: orderError } = await supabase
+    .from("orders")
+    .select("id,status")
+    .eq("order_no", orderNo)
+    .single();
+
+  if (orderError) throw orderError;
+  if (order.status !== "reviewed") throw new Error("Only an approved job can be closed.");
+
+  const { error } = await supabase.from("orders").update({ status: "closed" }).eq("id", order.id);
+  if (error) throw error;
+}
+
 export async function reviewDbOrder(orderNo: string, status: "reviewed" | "in_progress") {
   const { data: order, error: orderError } = await supabase
     .from("orders")

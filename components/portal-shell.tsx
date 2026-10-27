@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { OperationsAssistant } from "@/components/operations-assistant";
 
 type PortalShellProps = {
   children: ReactNode;
@@ -60,6 +61,7 @@ export function PortalShell({ children, role, active }: PortalShellProps) {
           <span className="rounded-full bg-mint px-3 py-1.5 text-xs font-semibold text-emerald-800">{role}</span>
         </header>
         {children}
+        {role === "Manager" && <OperationsAssistant />}
       </main>
     </div>
   );

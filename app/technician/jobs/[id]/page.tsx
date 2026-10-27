@@ -5,13 +5,16 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { PortalShell } from "@/components/portal-shell";
 import { CompletionForm } from "./completion-form";
-import { ensureDemoData, getOrderByNumber } from "@/lib/supabase/operations";
+import { ensureDemoData, getOrderByNumber, startDbOrder } from "@/lib/supabase/operations";
 import type { ServiceOrder } from "@/lib/order-types";
+
+const CURRENT_TECHNICIAN = "Ali";
 
 export default function TechnicianJobPage() {
   const params = useParams<{ id: string }>();
   const [order, setOrder] = useState<ServiceOrder | null>(null);
   const [loading, setLoading] = useState(true);
+  const [starting, setStarting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
@@ -36,6 +39,20 @@ export default function TechnicianJobPage() {
     return () => { active = false; };
   }, [params.id]);
 
+  async function startJob() {
+    if (!order) return;
+    setStarting(true);
+    setError("");
+    try {
+      await startDbOrder(order.orderNo);
+      setOrder({ ...order, status: "In Progress" });
+    } catch (startError) {
+      setError(startError instanceof Error ? startError.message : "Could not start this job.");
+    } finally {
+      setStarting(false);
+    }
+  }
+
   const completed = success || order?.status === "Job Done" || order?.status === "Reviewed" || order?.status === "Closed";
 
   return (
@@ -52,21 +69,25 @@ export default function TechnicianJobPage() {
               <h1 className="mt-3 text-2xl font-semibold">{order.serviceType}</h1>
               <p className="mt-1 text-white/65">{order.customerName}</p>
               <p className="mt-5 text-sm leading-6 text-white/75">{order.address}</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-white/45">Status: {order.status}</p>
             </header>
 
-            {success && (
-              <div role="status" className="mt-5 rounded-2xl bg-mint px-5 py-4 text-sm font-semibold text-emerald-900">
-                Job marked done successfully. The manager can now review this service record.
-              </div>
-            )}
+            {success && <div role="status" className="mt-5 rounded-2xl bg-mint px-5 py-4 text-sm font-semibold text-emerald-900">Job marked done successfully. The manager can now review this service record.</div>}
 
             <section className="mt-5 rounded-3xl border border-slate-200 bg-white p-5 shadow-soft">
               {completed ? (
                 <>
                   <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Service record saved</p>
-                  <h2 className="mt-2 text-xl font-semibold text-ink">This job is awaiting review</h2>
+                  <h2 className="mt-2 text-xl font-semibold text-ink">{order.status === "Closed" ? "This job is closed" : "This job is awaiting review"}</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-500">Your work details and evidence are stored. You can return to your job list.</p>
                   <Link href="/technician/jobs" className="mt-6 block w-full rounded-2xl bg-ink px-4 py-4 text-center text-sm font-semibold text-white">Back to my jobs</Link>
+                </>
+              ) : order.status === "Assigned" ? (
+                <>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Next action</p>
+                  <h2 className="mt-2 text-xl font-semibold text-ink">Start this service job</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-500">Confirm you are on the way or ready to begin. The completion form will appear after you start.</p>
+                  <button onClick={startJob} disabled={starting} className="mt-6 w-full rounded-2xl bg-ink px-4 py-4 text-sm font-semibold text-white disabled:cursor-wait disabled:opacity-60">{starting ? "Starting job..." : "Start job"}</button>
                 </>
               ) : (
                 <>
