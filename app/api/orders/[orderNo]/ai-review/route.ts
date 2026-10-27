@@ -54,9 +54,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
     comparableJobs: { count: amounts.length, medianFinal: median }
   };
 
+  // The verdict is deterministic so a manager can rely on it; the AI only explains it.
+  const farAboveMedian = median !== null && median > 0 && completion.finalAmount > median * 1.5;
+  const needsCheck = flags.some((f) => f.level !== "low") || farAboveMedian;
+  const verdict: "approve" | "check" = needsCheck ? "check" : "approve";
+
   const rulesOnly = {
-    recommendation: flags.some((f) => f.level === "high") ? "check" : flags.length ? "check" : "approve",
-    summary: flags.length ? flags.map((f) => f.title).join(". ") + "." : "No issues found by the rule checks. Amount, evidence and payment look consistent.",
+    recommendation: verdict,
+    summary: flags.length
+      ? flags.map((f) => f.title).join(". ") + "."
+      : farAboveMedian
+        ? `Final amount RM ${completion.finalAmount.toFixed(2)} is more than 1.5× the typical RM ${median?.toFixed(2)} for this service.`
+        : "No issues found by the rule checks. Amount, evidence and payment look consistent.",
     source: "rules" as const,
     facts
   };
@@ -71,16 +80,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ ord
         {
           role: "system",
           content:
-            'You are a service operations supervisor reviewing one completed aircond job for a manager in Malaysia. Use ONLY the JSON facts. Never invent facts. All amounts are Malaysian Ringgit: always write them as RM 380.00, never $. Return JSON {"recommendation":"approve"|"check","summary":"2-3 short plain sentences: the verdict, the main reason with exact numbers, and what to check if anything"}. Recommend "check" if any rule flag is high, if the final amount is far above the comparable median, if extras are not explained by the work done, or if evidence is missing.'
+            'You are a service operations supervisor writing a short note for a manager in Malaysia about one completed aircond job. The verdict is already decided and given to you; explain it, never change it. Use ONLY the JSON facts and never invent facts. All amounts are Malaysian Ringgit, written like RM 380.00, never $. Small differences from the typical price (under 50%) are normal and are not a problem. Return JSON {"summary":"2-3 short plain sentences: the verdict, the main reason with exact numbers, and what to check if the verdict is check"}.'
         },
-        { role: "user", content: JSON.stringify(facts) }
+        { role: "user", content: JSON.stringify({ verdict, ...facts }) }
       ],
       { json: true, maxTokens: 220 }
     );
-    const parsed = JSON.parse(result.content.match(/\{[\s\S]*\}/)?.[0] ?? "{}") as { recommendation?: string; summary?: string };
+    const parsed = JSON.parse(result.content.match(/\{[\s\S]*\}/)?.[0] ?? "{}") as { summary?: string };
     if (!parsed.summary) return NextResponse.json(rulesOnly);
     return NextResponse.json({
-      recommendation: parsed.recommendation === "approve" && !flags.some((f) => f.level === "high") ? "approve" : "check",
+      recommendation: verdict,
       summary: String(parsed.summary).slice(0, 600),
       source: "ai",
       model: result.model,
