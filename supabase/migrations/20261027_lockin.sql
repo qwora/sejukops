@@ -98,3 +98,33 @@ create index if not exists orders_technician_idx on public.orders (assigned_tech
 create index if not exists completions_completed_at_idx on public.service_completions (completed_at);
 create index if not exists activity_logs_order_idx on public.activity_logs (order_id, created_at);
 create index if not exists notifications_created_idx on public.notifications (created_at desc);
+
+-- 7. Reviewer accounts (@demo.sejuksejuk.app): role from the email, technician linked automatically.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  meta_role text := new.raw_user_meta_data->>'role';
+  resolved user_role;
+  display text := coalesce(nullif(new.raw_user_meta_data->>'name', ''), split_part(new.email, '@', 1));
+begin
+  if new.email = 'admin@demo.sejuksejuk.app' then resolved := 'admin'; display := 'Nurul Aisyah';
+  elsif new.email = 'manager@demo.sejuksejuk.app' then resolved := 'manager'; display := 'Rizal Kamal';
+  elsif new.email = 'ali@demo.sejuksejuk.app' then resolved := 'technician'; display := 'Ali';
+  elsif meta_role in ('admin', 'technician', 'manager') then resolved := meta_role::user_role;
+  else resolved := 'admin';
+  end if;
+
+  insert into public.profiles (id, full_name, email, role)
+  values (new.id, display, new.email, resolved)
+  on conflict (id) do nothing;
+
+  if new.email = 'ali@demo.sejuksejuk.app' then
+    update public.technicians set profile_id = new.id where name = 'Ali';
+  end if;
+  return new;
+end;
+$$;
