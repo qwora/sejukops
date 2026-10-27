@@ -101,8 +101,8 @@ Recommended route structure:
 - Supabase Storage
 - Vercel deployment
 - Serverless route handlers for controlled backend operations
-- Mock role login initially
-- Supabase Auth only if time allows
+- Supabase Auth email/password with role profiles
+- Mock role login retained as a deliberate preview fallback
 - AI provider connected through a server-side endpoint
 
 Next.js is used because it is a React framework and provides a practical structure for serverless operations, secure environment variables, route handlers and Vercel deployment. This is a deliberate implementation choice, not a departure from the requested React stack.
@@ -281,7 +281,9 @@ Completion criteria:
 - No secrets are committed
 - The project can be run locally with documented commands
 
-### Phase 1 — Public landing page and application shell
+### Phase 1 — Public landing page and application shell (implemented)
+
+Real Supabase Auth is now available through `/login` and `/signup`. New accounts store a role in Auth metadata and create a matching `profiles` row when a session is available. Demo role access remains available for reviewers who do not want to create an account.
 
 Deliverables:
 
@@ -381,7 +383,9 @@ The message should contain:
 
 The production WhatsApp Cloud API can be added later through server-side environment variables without changing the job workflow.
 
-### Phase 5 — KPI dashboard
+### Phase 5 — KPI dashboard (implemented)
+
+The first KPI slice is now live in `app/manager/dashboard/page.tsx`. It loads orders and service completions through the Supabase data-access layer and derives the current week's completed jobs, final amounts, jobs awaiting review, active orders and technician leaderboard. The view displays a clear live-data label and keeps the empty state safe when no completions exist.
 
 Deliverables:
 
@@ -395,7 +399,9 @@ Deliverables:
 
 Metrics must be derived from database records, not hardcoded values.
 
-### Phase 6 — AI operations assistant
+### Phase 6 — AI operations assistant (implemented)
+
+The first controlled assistant slice is now live. `POST /api/operations/query` supports a defined set of operational questions, queries only matching Supabase records, returns deterministic answers without requiring an AI key, and optionally uses a server-side `OPENAI_API_KEY` for wording only. The manager portal exposes the assistant through a Sidekick-style panel.
 
 Deliverables:
 

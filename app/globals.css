@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body { @apply bg-canvas text-ink-2 antialiased; font-feature-settings: "cv11", "ss01"; }
+  a { color: inherit; text-decoration: none; }
+  button, input, select, textarea { font: inherit; }
+  ::selection { background: #CFEFE0; }
+  :focus-visible { outline: 2px solid #0B7A5A; outline-offset: 2px; border-radius: 6px; }
+}
+
+@layer components {
+  .num { font-variant-numeric: tabular-nums; }
+  .card { @apply rounded-xl bg-surface shadow-card; }
+  .field { @apply block w-full rounded-lg border border-line-input bg-white px-3 text-[13px] text-ink outline-none transition placeholder:text-ink-faint focus:border-ink focus:ring-1 focus:ring-ink; }
+  .field-input { @apply field h-9; }
+  .field-area { @apply field py-2 leading-relaxed; }
+  .label { @apply flex flex-col gap-1.5 text-[13px] font-medium text-ink-2; }
+  .hint { @apply text-xs font-normal text-ink-muted; }
+  .m-field { @apply block w-full rounded-xl border border-line bg-white px-4 text-[15px] text-ink outline-none transition placeholder:text-ink-faint focus:border-brand focus:ring-2 focus:ring-brand/20; }
+}
