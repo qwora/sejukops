@@ -48,30 +48,27 @@ The assessment permits a mock role selector. Real Supabase Auth is now available
 
 ## Current implementation
 
-Current implementation:
+- Admin order creation and assignment
+- Technician mobile service workflow
+- Supabase Storage evidence upload
+- Manager review, approval, return and close flow
+- Weekly KPI dashboard and technician leaderboard
+- Controlled Operations Query API and Manager Sidekick
+- Supabase email/password Auth with role profiles
+- Manual WhatsApp deep links
 
-- Phase 0: project documentation and architecture foundation
-- Phase 2: Supabase-backed admin order creation, assignment and order details
-- Phase 3: mobile technician jobs, evidence upload, completion success and history
-- Phase 4: manager review queue and manual WhatsApp deep links
-- Phase 5: data-backed weekly KPI dashboard and technician leaderboard
-- Phase 6: controlled operations query endpoint and manager Sidekick panel
-- Real Supabase Auth sign-in, signup and role profiles
+See [docs/assessment-status.md](docs/assessment-status.md) for the assessment comparison, verified flow and known limitations.
 
-See plan.md for the complete implementation plan.
-
-## Local development
-
-The exact commands will be added when the application scaffold is created.
-
-Environment variables must be copied from .env.example into a local .env.local file. Never commit secret values.
+See [docs/ui-roadmap.md](docs/ui-roadmap.md) for the next UI-focused phase.
 
 ## Important limitations
 
 - WhatsApp currently uses a pre-filled wa.me link for manual sending.
 - WhatsApp Business API credentials and business phone registration are not included yet.
-- AI queries must use controlled query types and structured Supabase results.
-- Some role restrictions may initially be simulated in the interface for the assessment.
+- AI queries use controlled intent handlers and structured Supabase results.
+- OpenAI formatting is optional and requires a server-side `OPENAI_API_KEY`.
+- Some role restrictions are still simulated for the assessment preview.
+- The AI is not a general-purpose chatbot.
 
 ## Handoff
 
@@ -80,4 +77,8 @@ A new developer or AI agent should read these files in order:
 1. AGENTS.md
 2. plan.md
 3. docs/decisions.md
-4. The relevant source files for the current phase
+4. docs/assessment-status.md
+5. docs/ui-roadmap.md
+6. The relevant source files for the current phase
+
+The technical workflow has been verified on the deployed preview. Future work should focus primarily on UI quality while preserving the working data flow and state transitions.
