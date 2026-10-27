@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { readDemoOrders } from "@/lib/demo-orders";
+import { ensureDemoData, listOrders } from "@/lib/supabase/operations";
 import type { ServiceOrder, OrderStatus } from "@/lib/order-types";
 
 const statusClass: Record<OrderStatus, string> = {
@@ -20,14 +20,28 @@ export function OrderList() {
   const [orders, setOrders] = useState<ServiceOrder[]>([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"All" | OrderStatus>("All");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    setOrders(readDemoOrders());
+    let active = true;
+    async function load() {
+      try {
+        await ensureDemoData();
+        const data = await listOrders();
+        if (active) setOrders(data);
+      } catch (loadError) {
+        if (active) setError(loadError instanceof Error ? loadError.message : "Could not load orders.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    load();
+    return () => { active = false; };
   }, []);
 
   const filteredOrders = useMemo(() => {
     const query = search.trim().toLowerCase();
-
     return orders.filter((order) => {
       const matchesSearch = !query || [order.orderNo, order.customerName, order.serviceType, order.assignedTechnician, order.branch]
         .join(" ")
@@ -43,24 +57,17 @@ export function OrderList() {
       <div className="flex flex-col gap-4 border-b border-slate-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <h2 className="font-semibold text-ink">All orders</h2>
-          <p className="mt-1 text-sm text-slate-500">{filteredOrders.length} orders shown</p>
+          <p className="mt-1 text-sm text-slate-500">{loading ? "Loading orders..." : filteredOrders.length + " orders shown"}</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search orders..."
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sea focus:ring-2 focus:ring-blue-100"
-          />
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value as "All" | OrderStatus)}
-            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-sea focus:ring-2 focus:ring-blue-100"
-          >
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search orders..." className="rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sea focus:ring-2 focus:ring-blue-100" />
+          <select value={status} onChange={(event) => setStatus(event.target.value as "All" | OrderStatus)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600 outline-none focus:border-sea focus:ring-2 focus:ring-blue-100">
             {statuses.map((item) => <option key={item}>{item}</option>)}
           </select>
         </div>
       </div>
+
+      {error && <div role="alert" className="m-5 rounded-xl bg-rose px-4 py-3 text-sm text-red-800">Could not load Supabase orders: {error}</div>}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-[820px] text-left text-sm">
@@ -81,10 +88,7 @@ export function OrderList() {
                   <Link href={"/admin/orders/" + order.orderNo} className="font-semibold text-sea hover:underline">{order.orderNo}</Link>
                   <p className="mt-1 text-xs text-slate-400">{new Date(order.createdAt).toLocaleDateString("en-MY", { day: "numeric", month: "short" })}</p>
                 </td>
-                <td className="px-5 py-4">
-                  <p className="font-medium text-ink">{order.customerName}</p>
-                  <p className="mt-1 text-xs text-slate-400">{order.branch}</p>
-                </td>
+                <td className="px-5 py-4"><p className="font-medium text-ink">{order.customerName}</p><p className="mt-1 text-xs text-slate-400">{order.branch}</p></td>
                 <td className="px-5 py-4 text-slate-600">{order.serviceType}</td>
                 <td className="px-5 py-4 text-slate-600">{order.assignedTechnician || "Unassigned"}</td>
                 <td className="px-5 py-4 font-semibold text-ink">RM{order.quotedPrice.toFixed(2)}</td>
@@ -93,9 +97,7 @@ export function OrderList() {
             ))}
           </tbody>
         </table>
-        {filteredOrders.length === 0 && (
-          <div className="px-5 py-14 text-center text-sm text-slate-500">No orders match the current search.</div>
-        )}
+        {!loading && filteredOrders.length === 0 && !error && <div className="px-5 py-14 text-center text-sm text-slate-500">No orders match the current search.</div>}
       </div>
     </div>
   );

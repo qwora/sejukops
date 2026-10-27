@@ -2,55 +2,42 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createOrderNumber, readDemoOrders, saveDemoOrders } from "@/lib/demo-orders";
-import { branchOptions, serviceOptions, technicianOptions, type ServiceOrder } from "@/lib/order-types";
+import { createDbOrder } from "@/lib/supabase/operations";
+import { branchOptions, serviceOptions, technicianOptions } from "@/lib/order-types";
 
 export function NewOrderForm() {
   const router = useRouter();
   const [form, setForm] = useState({
-    customerName: "",
-    customerPhone: "",
-    address: "",
-    problemDescription: "",
-    serviceType: serviceOptions[0],
-    quotedPrice: "",
-    assignedTechnician: "",
-    branch: branchOptions[0],
-    adminNotes: ""
+    customerName: "", customerPhone: "", address: "", problemDescription: "",
+    serviceType: serviceOptions[0], quotedPrice: "", assignedTechnician: "",
+    branch: branchOptions[0], adminNotes: ""
   });
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   function updateField(field: keyof typeof form, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  function submitOrder(event: React.FormEvent<HTMLFormElement>) {
+  async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!form.customerName || !form.customerPhone || !form.address || !form.quotedPrice) {
       setError("Please complete the customer name, phone, address and quoted price.");
       return;
     }
 
-    const currentOrders = readDemoOrders();
-    const orderNo = createOrderNumber(currentOrders);
-    const newOrder: ServiceOrder = {
-      id: orderNo.toLowerCase(),
-      orderNo,
-      customerName: form.customerName,
-      customerPhone: form.customerPhone.replace(/[^0-9]/g, ""),
-      address: form.address,
-      problemDescription: form.problemDescription,
-      serviceType: form.serviceType,
-      quotedPrice: Number(form.quotedPrice),
-      assignedTechnician: form.assignedTechnician,
-      branch: form.branch,
-      status: form.assignedTechnician ? "Assigned" : "New",
-      adminNotes: form.adminNotes,
-      createdAt: new Date().toISOString()
-    };
-
-    saveDemoOrders([newOrder, ...currentOrders]);
-    router.push("/admin/orders/" + orderNo);
+    setSaving(true);
+    setError("");
+    try {
+      const orderNo = await createDbOrder({
+        ...form,
+        quotedPrice: Number(form.quotedPrice)
+      });
+      router.push("/admin/orders/" + orderNo);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Could not create the order.");
+      setSaving(false);
+    }
   }
 
   return (
@@ -80,7 +67,7 @@ export function NewOrderForm() {
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         <button type="button" onClick={() => router.push("/admin/orders")} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600">Cancel</button>
-        <button type="submit" className="rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800">Create order</button>
+        <button disabled={saving} type="submit" className="rounded-xl bg-ink px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:cursor-wait disabled:opacity-60">{saving ? "Creating..." : "Create order"}</button>
       </div>
     </form>
   );
