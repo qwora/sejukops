@@ -77,7 +77,7 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number exactly as given. Use plain sentences, at most 4 lines, and list order numbers on their own lines when there are 5 or fewer. If there are no rows, say so plainly."
+                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number and order number exactly as given. Plain text only: no markdown, no headings, no bullet symbols. Start with a one-sentence direct answer. If the rows contain an Order column and there are 6 or fewer rows, list each as 'ORDER1234 – detail' on its own line. Do not add a list for rankings; the table is shown separately. Reply in the language of the question. If there are no rows, say so plainly."
             },
             { role: "user", content: JSON.stringify({ question, intent, deterministicAnswer: result.answer, rows: result.rows.slice(0, 20) }) }
           ],
