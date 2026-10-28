@@ -43,11 +43,13 @@ Takes about 30 minutes. Use a laptop for Admin and Manager, and a phone for Tech
 |---|---|---|
 | B1 | On your phone open the site → sign in → **Technician**, technician **Ali** → Continue. | "Today's jobs" in a phone-style screen with a bottom tab bar. |
 | B2 | Find your order and tap it. | Job details: customer, **Call** and **WhatsApp** buttons, problem, admin note, quote. |
-| B3 | Tap **Accept & start job**. | Status changes to **In progress**; checklist appears. |
+| B3 | Tap **Waze** and **Google Maps**. | Each opens navigation to the customer's address. |
+| B3a | Tap **Accept & start job**. | Reminder "Take before photos first" appears. Tap **Got it, start job**. |
+| B3b | — | Status changes to **In progress**; checklist includes before and after photos. Tap **WhatsApp**: chat opens with "Hi …, I'm Ali, your technician from Sejuk Sejuk Service…". |
 | B4 | Tap **Complete job**. | Completion form: Work done, Extra charges, files, Payment, Receipt, Remarks. |
 | B5 | Tap **Mark job done** with Work done empty. | Asked to fill in Work done. |
 | B6 | Pick a work-done chip and add an extra charge (e.g. "Drain pipe flush", RM 40). | **Final amount** updates live to RM 220. |
-| B7 | Add 1–2 photos (camera or gallery). Try adding a 7th file. | Previews appear; more than 6 files is refused. |
+| B7 | Tap **Add**: the phone offers camera, photo library or files. Add 1–2 photos. Try a 7th file. | Previews appear; more than 6 files is refused. Files over 25 MB are skipped. |
 | B8 | Payment method **Cash**, add a **Receipt photo**, a remark → **Mark job done**. | **Job done** screen: amount, "evidence files · receipt attached", "Manager & accounts notified". |
 | B9 | Read the **customer feedback message**, tap **Send on WhatsApp**. | WhatsApp opens to the customer number with: *"Hi Test Ahmad, Job ORDER12xx has been completed by Technician Ali at …"*. You don't have to actually send it. |
 | B10 | Press the browser back button to return to the completion form. | "This job is job done." The form can't be submitted twice. |
