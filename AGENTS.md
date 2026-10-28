@@ -6,7 +6,7 @@ This repository contains the Sejuk Sejuk Operations System assessment project.
 
 Before making changes:
 
-1. Read plan.md.
+1. Read docs/history/plan.md (original plan) and docs/development-history.md.
 2. Read the relevant phase before implementing it.
 3. Inspect existing code before replacing anything.
 4. Preserve working behaviour.

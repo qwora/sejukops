@@ -4,6 +4,10 @@ Internal operations system for **Sejuk Sejuk Service Sdn Bhd** (aircond installa
 
 **Live demo:** https://sejuksejuk.vercel.app · open it, pick a role, press **Continue**. No password needed.
 
+**How it was built:** in stages over two days, each merged through a pull request and tested on the live site. See [docs/development-history.md](docs/development-history.md).
+
+**Tested:** 54 automated workflow and permission checks, 38 screens at phone and desktop size, and the full job flow on a real iPhone. See [docs/test-report.md](docs/test-report.md).
+
 ![Sejuk Sejuk mark](public/brand/sejuk-mark.svg)
 
 ```text
@@ -18,7 +22,7 @@ One Next.js app, one Supabase database, three role-specific experiences.
 | Role | Device | Design reference | Screens |
 | --- | --- | --- | --- |
 | **Admin** | Desktop | Shopify Admin | Orders (live stats, status tabs, search, branch/technician filters) · Create order (technician picker with live workload, WhatsApp preview) · Order detail (status stepper, assign / reassign, reschedule, activity timeline, notifications) |
-| **Technician** | Phone first, adapts to desktop · installable | Grab driver app | Today (next job, stats, today's list) · New job assigned (accept & start, or decline with a reason) · Job in progress (call / WhatsApp, checklist, sticky CTA) · Complete job (quick chips, ≤6 photos/video/PDF with previews, itemised extras, payment, auto final amount) · Job done (receipt + WhatsApp feedback message) · History |
+| **Technician** | Phone first, adapts to desktop · installable | Grab driver app | Today (next job, stats, today's list) · New job assigned (Waze / Google Maps, before-photo reminder, accept & start, or decline with a reason) · Job in progress (call, pre-filled WhatsApp, navigation, checklist incl. before/after photos, sticky CTA) · Complete job (quick chips, ≤6 photos/video/PDF from camera, gallery or files, itemised extras, payment, auto final amount) · Job done (receipt + WhatsApp feedback message) · History |
 | **Manager** | Desktop | Shopify Admin | Review queue (supervisor flags, quote vs final) · Review detail (evidence previews, approve / return with notes / close) · Performance (today / week / month, daily chart, branches, leaderboard, reschedules, overload insight) · Ops assistant (full page + side panel) |
 
 ### Assessment coverage
@@ -77,8 +81,9 @@ No other runtime dependencies.
 - **Reads on the client, writes on the server.** Screens read through `lib/data.ts`. Every change goes through an API route (`app/api/orders/...`) that resolves the caller, checks the role and the current status against the state machine, writes the change, writes an **activity log** row (actor, previous → new status, note) and creates **notifications**.
 - **Server recalculates money.** Final amount = quoted price + extra charges, computed on the server; the quote is never overwritten. Extra charges are stored as line items.
 - **Order numbers from a Postgres sequence** (`ORDER1241`, `ORDER1242`…), so two admins can't create the same number.
-- **Evidence** is uploaded to a private Supabase Storage bucket; managers see it through short-lived signed URLs. Max 6 files, 25 MB each, checked on client and server.
+- **Evidence** is uploaded to a private Supabase Storage bucket; managers see it through short-lived signed URLs. Photos are shrunk on the phone (1600 px JPEG) before upload. Limits: 6 files, 25 MB per file, 60 MB per job. The bucket itself rejects files over 25 MB or that aren't photos, videos or PDFs, and the server checks the real stored sizes before accepting a job.
 - **Phone numbers** are normalised to Malaysian E.164 (`012-345 6789` → `60123456789`) so WhatsApp links open the right chat.
+- **Navigation** is a one-tap Waze / Google Maps link built from the address. No map library or API key; Google and Waze search Malaysian addresses better than free geocoders.
 - Database changes are kept as SQL in `supabase/migrations` and demo data in `supabase/seed` (all demo rows are tagged `[demo]`).
 
 More detail: [docs/decisions.md](docs/decisions.md).
@@ -91,7 +96,7 @@ When a technician submits a job, `completeOrder` (server) sets the status to **J
 2. Stores it in `notifications` with a `https://wa.me/60…?text=…` link (status `ready`).
 3. Creates an internal notification for the manager / accounts (shown in the top-bar bell).
 
-The technician's **Job done** screen, the order page and the bell all show a **Send on WhatsApp** button. Clicking it opens WhatsApp with the message filled in and marks the notification `sent` (logged in the activity timeline). Assigning a technician creates a matching "new job" message for the technician.
+The technician's **Job done** screen, the order page and the bell all show a **Send on WhatsApp** button. Clicking it opens WhatsApp with the message filled in and marks the notification `sent` (logged in the activity timeline). Assigning a technician creates a matching "new job" message for the technician, including a Google Maps link. On the job screen, the technician's WhatsApp button opens a chat with the customer starting *"Hi {Customer}, I'm {Technician}, your technician from Sejuk Sejuk Service for job {Order}."*
 
 Not included: automatic sending through the WhatsApp Business (Cloud) API. That needs a Meta business account, a registered number and approved templates. The `notifications` table already has the shape needed to switch to API delivery later without changing the workflow.
 
@@ -128,7 +133,7 @@ The model never sees the database, credentials or unrelated rows, and cannot wri
 - Only the question types above. Anything else gets a fixed "I can only answer…" reply with suggestions.
 - One question at a time: no follow-ups that depend on the previous answer ("and John?").
 - Dates are interpreted in Malaysia time using fixed periods; custom date ranges aren't parsed.
-- The model may phrase things differently between runs, but numbers come from the query rows. If AI is down, rule-based answers are used.
+- The model may phrase things differently between runs, but numbers and order numbers come from the query rows. If AI is down, rule-based answers are used (English and common Malay questions).
 - AI Gateway free credit is limited; heavy use would need paid credit.
 
 ### Other AI features
@@ -139,7 +144,7 @@ The model never sees the database, credentials or unrelated rows, and cannot wri
 ## Challenges
 
 - **The email rate limit.** Supabase's free mailer sends 2 emails per hour, so signups failed. The real login bug was underneath it: the code read a `name` column, but the table has `full_name`. Fixed with a database trigger that creates profiles, confirmation emails switched off, and one-click reviewer access.
-- **Keeping AI honest.** Free-form text-to-SQL was too risky. The model only chooses from a fixed list of intents, queries are typed, and answers are checked. If the AI's wording drops a figure from the verified answer, the verified answer is shown instead.
+- **Keeping AI honest.** Free-form text-to-SQL was too risky. The model only chooses from a fixed list of intents, queries are typed, and answers are checked. If the AI's wording drops a figure from the verified answer, or mentions an order number that isn't in the data, the verified answer is shown instead.
 - **No AI key or budget.** Vercel AI Gateway authenticates deployed functions with OIDC, so no secret is stored, and the free credit covers `gpt-4o-mini`. Blocked models are skipped automatically.
 - **WhatsApp without the Business API.** Built a notifications table and a server trigger, so delivery is a deep link today and can become an API call later without changing the workflow.
 - **One codebase, two very different users.** Admins need density; technicians need speed with one hand. Solved with shared tokens and status colours but separate shells and layouts.
@@ -152,7 +157,7 @@ cp .env.example .env.local   # add your Supabase URL + anon key
 npm run dev
 ```
 
-Database: run `supabase/migrations/20261027_lockin.sql`, then (optional) the two files in `supabase/seed/`, in the Supabase SQL editor.
+Database: run the files in `supabase/migrations/` in order, then (optional) the two files in `supabase/seed/`, in the Supabase SQL editor.
 
 Environment variables are listed in `.env.example`. Locally, the assistant uses rules unless `AI_GATEWAY_API_KEY` is set.
 
@@ -161,9 +166,10 @@ Environment variables are listed in `.env.example`. Locally, the assistant uses 
 - **Demo access.** Reviewers can pick a role without an account. In demo mode the role is sent as a header and trusted by the API. With a real account the API verifies the Supabase session and reads the role from `profiles`.
 - **Row Level Security** is permissive for the prototype (anon can read/write the operations tables) so demo mode works. Production should remove the anon policies and require accounts.
 - Technicians see only their own jobs in the UI, and the API blocks starting or completing someone else's job when the technician is known.
-- Signup lets you choose a role. Production should use invitations.
+- Signup lets you choose a role, and technicians are added in the database. Production should have an admin-only Technicians page with invitations.
 - Technicians can install the app, but submitting a job still needs a connection (no offline queue yet).
-- No maps or GPS, matching the assessment scope.
+- No map view or GPS tracking; navigation opens Waze or Google Maps from the address text.
+- Customer phone numbers must be Malaysian (+60).
 - Supabase's free email sender allows 2 emails per hour, so email confirmation is turned off.
 
 ## Self-assessment
@@ -171,13 +177,15 @@ Environment variables are listed in `.env.example`. Locally, the assistant uses 
 - **Easiest:** Module 1. The form is simple once the data model and state machine exist.
 - **Hardest:** making the AI genuinely controlled: forcing the model into a fixed intent list, keeping retrieval narrow, and still giving useful, readable answers with a safe fallback. Second hardest: making the technician completion flow fast on a phone (chips, presets, sticky total) without losing data quality.
 - **For production I would add:** remove anon RLS policies and enforce roles in Postgres; WhatsApp Cloud API with delivery webhooks; offline queue for technicians; customer feedback capture; scheduling/calendar view with conflict checks; automated tests for the state machine and AI intents; audit export for accounts.
-- **How I used AI tools:** Codex built the first working version (Supabase wiring, workflow, first UI). Claude audited it, found and fixed the auth profile bug, phone format and single-review bugs, designed the UI (Shopify / Grab references), rebuilt the interface, moved writes server-side with activity logs and notifications, and built the AI query pipeline. Every flow was then tested end to end in the browser.
+- **How I used AI tools:** Codex built the first working version (Supabase wiring, workflow, first UI). Claude Code audited it, fixed the auth profile, phone format and single-review bugs, designed and rebuilt the UI (Shopify / Grab references), moved writes server-side with activity logs and notifications, built the AI query pipeline, and ran browser and API tests on every stage. I made the product calls, provided the brand, tested on a real iPhone and approved each merge. The full story is in [docs/development-history.md](docs/development-history.md).
 
 ## Docs
 
-- [plan.md](plan.md) – original implementation plan
+- [docs/development-history.md](docs/development-history.md) – how it was built, stage by stage, with the pull requests
 - [docs/assessment-checklist.md](docs/assessment-checklist.md) – every requirement, status and where to see it
-- [docs/test-report.md](docs/test-report.md) – final end-to-end test on the live site
+- [docs/test-report.md](docs/test-report.md) – final test on the live site
+- [docs/manual-test-guide.md](docs/manual-test-guide.md) – step-by-step script to test it yourself (about 30 minutes)
 - [docs/decisions.md](docs/decisions.md) – architecture decisions
-- [docs/assessment-status.md](docs/assessment-status.md) – verified flow and status
+- [docs/supabase-guide.md](docs/supabase-guide.md) – tables, why they're shaped this way, and security
+- [docs/history/](docs/history/) – planning notes written during the build
 - [AGENTS.md](AGENTS.md) – rules for anyone continuing the work

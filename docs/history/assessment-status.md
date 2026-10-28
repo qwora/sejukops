@@ -1,10 +1,10 @@
 # Assessment Status and Handoff
 
 Last verified: 27 October 2026
-Working branch: `lockin-final` (merged to `main` for production)
+Merged to `main` in PR #1 (production)
 Production: https://sejuksejuk.vercel.app
 
-## Lock-in update (27 Oct 2026)
+## UI rebuild update (27 Oct 2026)
 
 - New UI across all roles (Shopify-style admin and manager, Grab-style technician app).
 - All writes moved to server routes with one state machine and activity logs.
