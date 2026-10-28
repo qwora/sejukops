@@ -27,6 +27,8 @@ function Queue() {
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState("");
   const [actionError, setActionError] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const [flaggedOnly, setFlaggedOnly] = useState(false);
 
   const rows = useMemo(() => {
     if (!data) return { review: [], approved: [] };
@@ -37,13 +39,18 @@ function Queue() {
           const completion = data.completions.find((c) => c.orderNo === order.orderNo) ?? null;
           return { order, completion, flags: supervisorFlags(order, completion) };
         })
-        .sort((a, b) => (a.completion?.completedAt ?? "").localeCompare(b.completion?.completedAt ?? ""));
+        // Newest first by default; the manager can switch to oldest first.
+        .sort((a, b) => {
+          const byTime = (a.completion?.completedAt ?? "").localeCompare(b.completion?.completedAt ?? "");
+          return sort === "oldest" ? byTime : -byTime;
+        });
     return { review: withCompletion("Job Done"), approved: withCompletion("Reviewed") };
-  }, [data]);
+  }, [data, sort]);
 
   const waitingValue = rows.review.reduce((sum, r) => sum + (r.completion?.finalAmount ?? 0), 0);
   const flagged = rows.review.filter((r) => r.flags.length).length;
-  const oldest = rows.review[0]?.completion?.completedAt;
+  const oldest = rows.review.map((r) => r.completion?.completedAt).filter(Boolean).sort()[0];
+  const shown = flaggedOnly ? rows.review.filter((r) => r.flags.length) : rows.review;
 
   async function close(orderNo: string) {
     setBusy(orderNo);
@@ -77,15 +84,39 @@ function Queue() {
           </div>
 
           <section className="card overflow-hidden">
-            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
               <h2 className="text-sm font-semibold text-ink">Needs review</h2>
-              <span className="text-xs text-ink-muted">Oldest first</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  aria-pressed={flaggedOnly}
+                  onClick={() => setFlaggedOnly((value) => !value)}
+                  className={"h-7 rounded-md px-2.5 text-xs font-medium transition " + (flaggedOnly ? "bg-navy text-white" : "bg-rail text-ink-2 hover:text-ink")}
+                >
+                  Flagged only{flagged ? ` (${flagged})` : ""}
+                </button>
+                <div role="group" aria-label="Sort" className="flex rounded-md bg-rail p-0.5 text-xs font-medium">
+                  {(["newest", "oldest"] as const).map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      aria-pressed={sort === option}
+                      onClick={() => setSort(option)}
+                      className={"h-6 rounded px-2.5 transition " + (sort === option ? "bg-white text-ink shadow-sec" : "text-ink-muted hover:text-ink")}
+                    >
+                      {option === "newest" ? "Newest first" : "Oldest first"}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             {rows.review.length === 0 ? (
               <EmptyState icon={<ClipboardCheck className="h-5 w-5" />} title="All caught up" body="No completed jobs are waiting for review." />
+            ) : shown.length === 0 ? (
+              <EmptyState icon={<ClipboardCheck className="h-5 w-5" />} title="No flagged jobs" body="Every job waiting for review passed the supervisor checks." />
             ) : (
               <ul>
-                {rows.review.map(({ order, completion, flags }) => {
+                {shown.map(({ order, completion, flags }) => {
                   const diff = (completion?.finalAmount ?? order.quotedPrice) - order.quotedPrice;
                   return (
                     <li key={order.id}>
