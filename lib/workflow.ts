@@ -52,6 +52,8 @@ export function checkTransition(action: WorkflowAction, role: AppRole, current: 
 
 export const MAX_EVIDENCE_FILES = 6;
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
+/** Safety net for one job: all evidence files plus the receipt. */
+export const MAX_JOB_BYTES = 60 * 1024 * 1024;
 
 export function calculateFinalAmount(quotedPrice: number, extraCharges: number) {
   return Math.round((Number(quotedPrice) + Math.max(0, Number(extraCharges) || 0)) * 100) / 100;
