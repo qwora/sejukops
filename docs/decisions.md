@@ -187,3 +187,13 @@ Reason:
 - Receipts and transfer slips are often already in the gallery or a PDF.
 - Shrinking photos makes uploads faster on mobile data and keeps the 1 GB free storage from filling up.
 - Before photos can't be taken after the work starts, so the reminder comes at the start.
+
+## ADR-018: AI answers may only mention orders that are in the data
+
+Decision: After the AI writes an answer, the server checks that every order number in it appears in the rows returned by the query. If not, the verified rule-based answer is shown instead. The rule-based fallback also understands common Malay words (berapa, siap, hari ini, minggu ini, paling banyak, sibuk).
+
+Reason:
+
+- In the final audit the AI sometimes listed made-up order numbers for "How many jobs were completed today?", whose rows are per-technician totals with no order numbers.
+- The existing check already rejected answers that dropped key figures; this closes the remaining gap for invented records.
+- Malay questions should still work when the AI Gateway is unavailable.

@@ -1,6 +1,6 @@
 # Assessment Checklist
 
-Every requirement in `Programmer Assessment.md`, checked against the live app (https://sejuksejuk.vercel.app) on 27 Oct 2026.
+Every requirement in `Programmer Assessment.md`, checked against the live app (https://sejuksejuk.vercel.app), last on 28 Oct 2026.
 
 ✅ done · ➕ done beyond what was asked · ⚠️ partial (reason given)
 
@@ -61,11 +61,11 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 
 | Field / item | Status | Notes |
 | --- | --- | --- |
-| Mobile-first, fast field workflow | ✅ | Full-screen on phones, 48px+ buttons, sticky action; adapts to desktop; installable as a PWA |
+| Mobile-first, fast field workflow | ✅ | Full-screen on phones, 48px+ buttons, sticky action; adapts to desktop; installable as a PWA (tested on a real iPhone) |
 | Order ID (read-only) | ✅ | Header of every job screen |
 | Work Done | ✅ | Quick chips + free text |
 | Extra Charges | ✅ | Preset chips + custom lines, stored itemised |
-| Upload ≤ 6 photos / video / PDF | ✅ | Previews, remove, 6-file and 25 MB limits (client and server) |
+| Upload ≤ 6 photos / video / PDF | ✅ | Camera, gallery or files; photos shrunk before upload; 6 files, 25 MB per file, 60 MB per job, enforced on the phone, the server and the storage bucket |
 | Final Amount (auto-calculated) | ✅ | Live on screen; recalculated on the server |
 | Remarks | ✅ | |
 | Technician Name | ✅ | From the signed-in technician; shown in the header |
@@ -76,7 +76,7 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 | Bonus: WhatsApp feedback message to customer | ✅ | Job done screen |
 | Bonus: notify manager / accounts | ✅ | Internal notification + review queue |
 | Back-end: file upload + completion write | ✅ | Storage upload → `POST /api/orders/[no]/complete` |
-| Extra | ➕ | Accept-job screen, checklist, history, returned-job banner, duplicate submit blocked |
+| Extra | ➕ | Accept-job screen, Waze / Google Maps buttons, before/after photo reminder, pre-filled WhatsApp to customer, checklist, history, returned-job banner, decline with reason, duplicate submit blocked |
 
 ## Module 3 — WhatsApp trigger
 
@@ -125,7 +125,7 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 | Item | Status |
 | --- | --- |
 | Live demo | ✅ https://sejuksejuk.vercel.app |
-| GitHub repo | ⚠️ Repo is private: make it public or invite the assessor |
+| GitHub repo | ⚠️ Private: invite the assessor as a collaborator before submitting. Build history: `docs/development-history.md` |
 | README: what was built | ✅ |
 | Tech stack | ✅ |
 | Architecture decisions | ✅ README + `docs/decisions.md` |
