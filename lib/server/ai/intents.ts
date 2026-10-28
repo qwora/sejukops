@@ -34,10 +34,10 @@ Periods: today, yesterday, this_week, last_week, this_month, last_7_days. Defaul
 Return like {"type":"jobs_by_technician","technician":"Ali","period":"last_week"}.`;
 
 function pickPeriod(lower: string, fallback: Period = "this_week"): Period {
-  if (/\byesterday\b/.test(lower)) return "yesterday";
+  if (/\byesterday\b|\bsemalam\b/.test(lower)) return "yesterday";
   if (/\btoday\b|\bhari ini\b/.test(lower)) return "today";
   if (/last week|previous week|minggu lepas/.test(lower)) return "last_week";
-  if (/this month|month/.test(lower)) return "this_month";
+  if (/this month|month|bulan/.test(lower)) return "this_month";
   if (/last 7 days|past week|7 days/.test(lower)) return "last_7_days";
   if (/this week|week|minggu ini/.test(lower)) return "this_week";
   return fallback;
@@ -49,16 +49,16 @@ export function classifyWithRules(question: string): Intent {
   const tech = technicianOptions.find((name) => new RegExp("\\b" + name.toLowerCase() + "\\b").test(lower));
   const amount = Number((lower.match(/rm\s?(\d+(?:\.\d+)?)/) ?? lower.match(/(?:above|over|more than|>)\s?(\d+(?:\.\d+)?)/))?.[1]);
 
-  if (/overload|too many|busy|workload|burn/.test(lower)) return { type: "overloaded_technicians", period: pickPeriod(lower) };
+  if (/overload|too many|busy|workload|burn|terlalu banyak|sibuk/.test(lower)) return { type: "overloaded_technicians", period: pickPeriod(lower) };
   if (/flag|issue|problem|suspicious|no photo|without photo|above quote|over quote/.test(lower)) return { type: "flagged_jobs", period: pickPeriod(lower) };
   if (/extra charge/.test(lower) && Number.isFinite(amount)) return { type: "extra_charges_above", amount, period: pickPeriod(lower) };
-  if (/waiting|awaiting|needs? review|pending review|to review/.test(lower)) return { type: "awaiting_review" };
+  if (/waiting|awaiting|needs? review|pending review|to review|menunggu/.test(lower)) return { type: "awaiting_review" };
   if (/unassigned|not assigned|without (a )?technician/.test(lower)) return { type: "unassigned_orders" };
   if (/(most|top|highest|best)/.test(lower) && /(revenue|amount|money|sales|rm)/.test(lower)) return { type: "top_technician", period: pickPeriod(lower), metric: "revenue" };
-  if (/(most|top|highest|best)/.test(lower)) return { type: "top_technician", period: pickPeriod(lower), metric: "jobs" };
-  if (/(revenue|collected|total amount|how much)/.test(lower)) return { type: "revenue_summary", period: pickPeriod(lower) };
-  if (tech && /(job|complete|finish|done|work)/.test(lower)) return { type: "jobs_by_technician", technician: tech, period: pickPeriod(lower) };
-  if (/(how many|number of|count)/.test(lower) && /(job|complete|done)/.test(lower)) return { type: "jobs_completed_count", period: pickPeriod(lower, "today") };
+  if (/(most|top|highest|best|paling banyak|terbanyak)/.test(lower)) return { type: "top_technician", period: pickPeriod(lower), metric: "jobs" };
+  if (/(revenue|collected|total amount|how much|jumlah kutipan|hasil)/.test(lower)) return { type: "revenue_summary", period: pickPeriod(lower) };
+  if (tech && /(job|complete|finish|done|work|kerja|siap)/.test(lower)) return { type: "jobs_by_technician", technician: tech, period: pickPeriod(lower) };
+  if (/(how many|number of|count|berapa|bilangan)/.test(lower) && /(job|complete|done|kerja|siap)/.test(lower)) return { type: "jobs_completed_count", period: pickPeriod(lower, "today") };
   return { type: "unsupported" };
 }
 
