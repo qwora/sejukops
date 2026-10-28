@@ -12,6 +12,13 @@ const UNSUPPORTED =
   "I can only answer questions about Sejuk Sejuk service records: completed jobs, technicians, revenue, the review queue, unassigned orders, workload and flagged jobs. Try one of the suggested questions.";
 
 /** Guard against the model dropping or changing numbers: every figure in the verified headline must appear. */
+/** Every order number in the AI answer must exist in the returned rows; no copied placeholders. */
+function onlyKnownOrders(candidate: string, rows: unknown[]) {
+  const known = new Set(JSON.stringify(rows).match(/ORDER\d+/g) ?? []);
+  const mentioned = candidate.match(/ORDER\d+/g) ?? [];
+  return !/\bdetail\b/i.test(candidate) && mentioned.every((order) => known.has(order));
+}
+
 function keepsKeyFigures(verified: string, candidate: string) {
   const norm = (s: string) => s.replace(/,/g, "");
   const headline = verified.split("\n")[0].replace(/\([^)]*\)/g, ""); // ignore date ranges in brackets
@@ -86,19 +93,21 @@ export async function POST(request: Request) {
             {
               role: "system",
               content:
-                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number and order number exactly as given. Plain text only: no markdown, no headings, no bullet symbols. Start with a direct answer that keeps every key figure from deterministicAnswer (counts, amounts, averages, ratios, periods). If the rows contain an Order column and there are 6 or fewer rows, list each as 'ORDER1234 – detail' on its own line. Do not add a list for rankings; the table is shown separately. Reply in the language of the question. If there are no rows, say so plainly."
+                "You write short answers for an air-conditioning service operations manager. Use ONLY the facts in the provided data. Never invent names, numbers, orders or dates. Keep every number and order number exactly as given. Plain text only: no markdown, no headings, no bullet symbols. Start with a direct answer that keeps every key figure from deterministicAnswer (counts, amounts, averages, ratios, periods). If the rows contain an Order column and there are 6 or fewer rows, list each order on its own line as the order number, an en dash, then its service type. Only use order numbers that appear in the rows; if the rows have no Order column, do not list orders. Do not add a list for rankings; the table is shown separately. Reply in the language of the question. If there are no rows, say so plainly."
             },
             { role: "user", content: JSON.stringify({ question, intent, deterministicAnswer: result.answer, rows: result.rows.slice(0, 20) }) }
           ],
           { maxTokens: 300 }
         );
         const cleaned = formatted.content.replace(/[ \t]+$/gm, "").replace(/\*\*/g, "").trim();
-        if (keepsKeyFigures(result.answer, cleaned)) {
+        if (!keepsKeyFigures(result.answer, cleaned)) {
+          trace.push("AI answer dropped key figures; using the verified answer.");
+        } else if (!onlyKnownOrders(cleaned, result.rows)) {
+          trace.push("AI answer mentioned orders that are not in the data; using the verified answer.");
+        } else {
           answer = cleaned;
           formattedBy = "ai";
           model = model ?? formatted.model;
-        } else {
-          trace.push("AI answer dropped key figures; using the verified answer.");
         }
       } catch (error) {
         trace.push("AI format failed: " + (error instanceof Error ? error.message.slice(0, 120) : "error"));
