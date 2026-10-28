@@ -204,7 +204,7 @@ function NewOrderForm() {
             {form.technician ? (
               <div className="rounded-2xl bg-whatsapp-bubble/60 p-3 text-[12.5px] leading-relaxed text-[#12301F]">
                 <div className="mb-1 text-[11px] font-semibold text-ok">WhatsApp preview → {form.technician}</div>
-                <p className="whitespace-pre-line">{preview}</p>
+                <p className="whitespace-pre-line [overflow-wrap:anywhere]">{preview}</p>
               </div>
             ) : (
               <p className="text-[13px] text-ink-muted">Pick a technician to prepare a WhatsApp job message. You send it from the order page.</p>

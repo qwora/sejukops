@@ -79,7 +79,7 @@ export function NotificationBell({ orderHref }: { orderHref: (orderNo: string) =
                     <Link href={orderHref(item.orderNo)} onClick={() => setOpen(false)} className="num font-medium text-ink-muted hover:text-ink hover:underline">{item.orderNo}</Link>
                     <span className="ml-auto text-[11px] text-ink-faint">{timeAgo(item.createdAt)}</span>
                   </div>
-                  <p className="mt-0.5 line-clamp-2 whitespace-pre-line text-[12.5px] text-ink-muted">
+                  <p className="mt-0.5 line-clamp-2 whitespace-pre-line [overflow-wrap:anywhere] text-[12.5px] text-ink-muted">
                     {item.channel === "whatsapp" ? `WhatsApp to ${item.audience}: ` : ""}
                     {item.message.split("\n")[0]}
                   </p>

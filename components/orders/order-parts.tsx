@@ -91,7 +91,7 @@ export function WhatsAppMessages({ notifications, onSent }: { notifications: App
               <span className="font-semibold text-ink">{EVENT[item.event] ?? item.event} → {AUDIENCE[item.audience]}</span>
               <span className="ml-auto text-ink-faint">{timeAgo(item.createdAt)}</span>
             </div>
-            <p className="whitespace-pre-line rounded-lg rounded-tl-sm bg-[#DCF8C6] px-3 py-2 text-[12.5px] leading-relaxed text-[#12301F]">{item.message}</p>
+            <p className="whitespace-pre-line [overflow-wrap:anywhere] rounded-lg rounded-tl-sm bg-[#DCF8C6] px-3 py-2 text-[12.5px] leading-relaxed text-[#12301F]">{item.message}</p>
             {item.link && (
               <a href={item.link} target="_blank" rel="noreferrer" onClick={() => mark(item)} className="mt-2 inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-full bg-whatsapp text-[13px] font-semibold text-whatsapp-ink hover:brightness-95">
                 <MessageCircle className="h-4 w-4" />{isSent ? "Open again in WhatsApp" : "Send on WhatsApp"}
