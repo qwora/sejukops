@@ -1,4 +1,4 @@
--- Lock-in migration: additive only. Safe to re-run.
+-- Core workflow migration: additive only. Safe to re-run.
 
 -- 1. Profiles: add email, create profile automatically for every new auth user
 alter table public.profiles add column if not exists email text;
