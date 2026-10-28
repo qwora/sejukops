@@ -44,7 +44,7 @@ function Today() {
 
   return (
     <div>
-      <header className="relative overflow-hidden bg-brand-grad px-5 pb-16 pt-6 text-white">
+      <header className="relative overflow-clip bg-brand-grad px-5 pb-16 pt-[calc(24px+env(safe-area-inset-top))] text-white">
         <span className="pointer-events-none absolute -right-[150px] -top-[150px] h-[300px] w-[300px] rounded-full border-[34px] border-white/10" aria-hidden />
         <div className="relative flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-base font-medium">{(me ?? "?")[0]}</span>

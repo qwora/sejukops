@@ -35,7 +35,7 @@ function HistoryView() {
 
   return (
     <div>
-      <header className="bg-white px-5 pb-4 pt-6">
+      <header className="bg-white px-5 pb-4 pt-[calc(24px+env(safe-area-inset-top))]">
         <h1 className="text-[28px] font-extralight tracking-tight text-ink">History</h1>
         <p className="num mt-1 text-[13px] text-ink-muted">{data ? `${data.completions.length} jobs · ${money(total, 0)} total` : "Loading…"}</p>
       </header>
