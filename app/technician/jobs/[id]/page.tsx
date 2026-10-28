@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, Camera, Check, ChevronLeft, MapPin, MessageCircle, MessageSquareText, Navigation, Phone } from "lucide-react";
 import { MobileShell } from "@/components/shell/mobile-shell";
@@ -38,6 +38,10 @@ function JobView() {
   const [declining, setDeclining] = useState(false);
   const [reason, setReason] = useState("");
   const [reminding, setReminding] = useState(false);
+  const reminderRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (reminding) reminderRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [reminding]);
 
   if (loading && !bundle) {
     return <div className="space-y-3 p-4"><Skeleton className="h-24 w-full rounded-2xl" /><Skeleton className="h-64 w-full rounded-2xl" /></div>;
@@ -132,7 +136,7 @@ function JobView() {
             </button>
           </div>
           {reminding && (
-            <div role="dialog" aria-label="Photo reminder" className="flex flex-col gap-3 rounded-3xl border border-line bg-canvas p-4 animate-fade-up">
+            <div ref={reminderRef} role="dialog" aria-label="Photo reminder" className="flex flex-col gap-3 rounded-3xl border border-line bg-canvas p-4 animate-fade-up">
               <div className="flex gap-3">
                 <span className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-brand-tint text-brand"><Camera className="h-5 w-5" /></span>
                 <div className="text-sm leading-snug">
