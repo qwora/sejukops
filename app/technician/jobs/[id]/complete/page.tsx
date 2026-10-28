@@ -11,7 +11,8 @@ import { apiPost } from "@/lib/api";
 import { useLoad } from "@/lib/use-load";
 import { useSession } from "@/lib/session";
 import { formatDateTime, money } from "@/lib/format";
-import { calculateFinalAmount, MAX_EVIDENCE_FILES, MAX_FILE_BYTES } from "@/lib/workflow";
+import { calculateFinalAmount, MAX_EVIDENCE_FILES, MAX_FILE_BYTES, MAX_JOB_BYTES } from "@/lib/workflow";
+import { shrinkImage } from "@/lib/image";
 
 export default function CompleteJobPage() {
   return (
@@ -49,6 +50,7 @@ function CompleteForm() {
   const [formError, setFormError] = useState("");
   const [stage, setStage] = useState<"" | "uploading" | "saving">("");
   const [receipt, setReceipt] = useState<Picked | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const receiptRef = useRef<HTMLInputElement>(null);
   const submitted = useRef(false);
@@ -77,18 +79,40 @@ function CompleteForm() {
     setChips((current) => (current.includes(chip) ? current.filter((c) => c !== chip) : [...current, chip]));
   }
 
-  function addFiles(list: FileList | null) {
-    if (!list) return;
-    const incoming = Array.from(list);
+  async function addFiles(list: FileList | null) {
+    if (!list || list.length === 0) return;
+    const picked = Array.from(list);
+    if (inputRef.current) inputRef.current.value = "";
+    setPreparing(true);
+    const incoming = await Promise.all(picked.map(shrinkImage));
+    setPreparing(false);
     const tooBig = incoming.filter((f) => f.size > MAX_FILE_BYTES);
     const ok = incoming.filter((f) => f.size <= MAX_FILE_BYTES);
     const room = MAX_EVIDENCE_FILES - files.length;
-    const accepted = ok.slice(0, room);
+    let used = files.reduce((sum, f) => sum + f.file.size, 0) + (receipt?.file.size ?? 0);
+    const accepted: File[] = [];
+    let overTotal = 0;
+    for (const file of ok.slice(0, room)) {
+      if (used + file.size > MAX_JOB_BYTES) { overTotal++; continue; }
+      used += file.size;
+      accepted.push(file);
+    }
     setFiles((current) => [...current, ...accepted.map((file, i) => ({ id: Date.now() + i, file, url: URL.createObjectURL(file) }))]);
-    if (tooBig.length) setFormError(`${tooBig.length} file(s) over 25 MB were skipped.`);
+    if (tooBig.length) setFormError(`${tooBig.length} file(s) over 25 MB were skipped. Keep videos under 15 seconds.`);
+    else if (overTotal) setFormError(`${overTotal} file(s) skipped: one job can hold up to 60 MB.`);
     else if (ok.length > room) setFormError(`Only ${MAX_EVIDENCE_FILES} files allowed. ${ok.length - room} not added.`);
     else setFormError("");
-    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  async function pickReceipt(list: FileList | null) {
+    const picked = list?.[0];
+    if (receiptRef.current) receiptRef.current.value = "";
+    if (!picked) return;
+    const file = await shrinkImage(picked);
+    const used = files.reduce((sum, f) => sum + f.file.size, 0);
+    if (file.size > MAX_FILE_BYTES) setFormError("Receipt is over 25 MB.");
+    else if (used + file.size > MAX_JOB_BYTES) setFormError("Receipt skipped: one job can hold up to 60 MB.");
+    else { setFormError(""); setReceipt({ id: Date.now(), file, url: URL.createObjectURL(file) }); }
   }
 
   function togglePreset(preset: { label: string; amount: number }) {
@@ -140,7 +164,7 @@ function CompleteForm() {
 
   return (
     <div className="flex min-h-screen flex-col lg:min-h-[calc(100vh-48px)]">
-      <div className="sticky top-0 z-10 flex h-[60px] items-center gap-2 border-b border-line bg-white px-2">
+      <div className="sticky top-0 z-10 flex min-h-[60px] items-center gap-2 border-b border-line bg-white/95 px-2 pt-[env(safe-area-inset-top)] backdrop-blur">
         <Link href={"/technician/jobs/" + order.orderNo} aria-label="Back" className="flex h-11 w-11 items-center justify-center text-ink"><ChevronLeft className="h-5 w-5" /></Link>
         <div className="flex-1">
           <h1 className="text-xl font-light tracking-tight text-ink">Complete job</h1>
@@ -191,8 +215,8 @@ function CompleteForm() {
               </button>
             )}
           </div>
-          <input ref={inputRef} type="file" multiple accept="image/*,video/*,application/pdf" capture="environment" className="sr-only" onChange={(e) => addFiles(e.target.files)} aria-label="Add evidence files" />
-          {files.length === 0 && <p className="mt-2 text-xs text-ink-faint">Jobs without photos are flagged for the manager.</p>}
+          <input ref={inputRef} type="file" multiple accept="image/*,video/*,application/pdf" className="sr-only" onChange={(e) => addFiles(e.target.files)} aria-label="Add evidence files" />
+          <p className="mt-2 text-xs text-ink-faint">{preparing ? "Preparing photos…" : "Add before and after photos. Jobs without photos are flagged for the manager. Videos up to 25 MB (about 15 seconds)."}</p>
         </section>
 
         <section className={section}>
@@ -261,7 +285,7 @@ function CompleteForm() {
                 <p className="font-semibold text-ink">Receipt photo <span className="font-normal text-ink-faint">(optional)</span></p>
                 <p className="text-xs text-ink-muted">{receipt ? receipt.file.name : "Transfer slip, QR screenshot or signed receipt"}</p>
               </div>
-              <input ref={receiptRef} type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" aria-label="Receipt photo" onChange={(e) => { const f = e.target.files?.[0]; if (f) { if (f.size > MAX_FILE_BYTES) setFormError("Receipt is over 25 MB."); else setReceipt({ id: Date.now(), file: f, url: URL.createObjectURL(f) }); } e.target.value = ""; }} />
+              <input ref={receiptRef} type="file" accept="image/*,application/pdf" className="sr-only" aria-label="Receipt photo" onChange={(e) => pickReceipt(e.target.files)} />
             </div>
           )}
         </section>
@@ -282,7 +306,7 @@ function CompleteForm() {
           </div>
           <p className="num text-[32px] font-extralight tracking-tight text-ink">{money(finalAmount)}</p>
         </div>
-        <button onClick={submit} disabled={!!stage} className="flex h-14 items-center justify-center rounded-full bg-brand text-base font-medium text-white shadow-cta transition active:scale-[.99] disabled:opacity-70">
+        <button onClick={submit} disabled={!!stage || preparing} className="flex h-14 items-center justify-center rounded-full bg-brand text-base font-medium text-white shadow-cta transition active:scale-[.99] disabled:opacity-70">
           {stage === "uploading" ? `Uploading ${files.length} file${files.length === 1 ? "" : "s"}…` : stage === "saving" ? "Saving…" : "Mark job done"}
         </button>
       </div>

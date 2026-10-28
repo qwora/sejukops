@@ -43,7 +43,7 @@ function Done() {
 
   return (
     <div className="flex min-h-screen flex-col lg:min-h-[calc(100vh-48px)]">
-      <div className="relative flex flex-col items-center gap-3 overflow-hidden bg-brand-sky px-6 pb-[72px] pt-10 text-center text-white">
+      <div className="relative flex flex-col items-center gap-3 overflow-clip bg-brand-sky px-6 pb-[72px] pt-[calc(40px+env(safe-area-inset-top))] text-center text-white">
         <span className="pointer-events-none absolute -top-[120px] h-[360px] w-[360px] rounded-full border border-white/10" aria-hidden />
         <span className="pointer-events-none absolute -top-[60px] h-[240px] w-[240px] rounded-full border border-white/15" aria-hidden />
         <span className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white shadow-[0_0_0_10px_rgba(255,255,255,.15)] animate-fade-up">

@@ -1,6 +1,6 @@
 import { serverClient } from "./db";
 import type { Actor } from "./actor";
-import { calculateFinalAmount, checkTransition, MAX_EVIDENCE_FILES, statusFromDb, statusToDb, WORKFLOW, type WorkflowAction } from "@/lib/workflow";
+import { calculateFinalAmount, checkTransition, MAX_EVIDENCE_FILES, MAX_FILE_BYTES, MAX_JOB_BYTES, statusFromDb, statusToDb, WORKFLOW, type WorkflowAction } from "@/lib/workflow";
 import { isValidMyPhone, normalizeMyPhone } from "@/lib/phone";
 import { jobDoneMessage, newJobMessage, waLink } from "@/lib/whatsapp";
 import { branchOptions, serviceOptions, type ExtraItem, type OrderStatus } from "@/lib/order-types";
@@ -253,6 +253,22 @@ export async function completeOrder(actor: Actor, orderNo: string, body: Record<
 
   const receipt = body.receipt && typeof body.receipt === "object" ? (body.receipt as Record<string, unknown>) : null;
   if (receipt && (typeof receipt.path !== "string" || !receipt.path.startsWith(order.order_no + "/"))) throw new WorkflowError("Invalid receipt file.");
+
+  // Check the real stored sizes, not what the phone says.
+  const paths = [...files.map((file) => file.path as string), ...(receipt ? [receipt.path as string] : [])];
+  if (paths.length) {
+    const { data: stored, error: listError } = await db.storage.from("service-evidence").list(order.order_no, { limit: 1000 });
+    if (listError) throw new WorkflowError("Could not check the uploaded files.", 500);
+    const sizes = new Map((stored ?? []).map((item) => [order.order_no + "/" + item.name, Number(item.metadata?.size) || 0]));
+    let total = 0;
+    for (const path of paths) {
+      if (!sizes.has(path)) throw new WorkflowError("An uploaded file is missing. Please add it again.");
+      const size = sizes.get(path) ?? 0;
+      if (size > MAX_FILE_BYTES) throw new WorkflowError("Each file must be 25 MB or smaller.");
+      total += size;
+    }
+    if (total > MAX_JOB_BYTES) throw new WorkflowError("Files for one job must be 60 MB or less in total.");
+  }
 
   const paymentAmount = Math.max(0, Number(body.paymentAmount) || 0);
   const paymentMethod = text(body.paymentMethod, 40) || (paymentAmount > 0 ? "Cash" : "Not recorded");

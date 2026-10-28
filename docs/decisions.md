@@ -169,3 +169,21 @@ Reason:
 
 - In real operations a technician may be sick or the job may need different skills.
 - Keeping assignment admin-only (as the brief requires) while letting the technician hand the job back is the smallest change that matches reality.
+
+## ADR-017: Field-friendly technician screens and upload limits
+
+Decision:
+
+- Navigation is a one-tap **Waze** / **Google Maps** link built from the address text. No map library.
+- Uploads open the phone's normal picker (camera, photo library or files) instead of forcing the camera.
+- Photos are shrunk on the phone (longest side 1600 px, JPEG) before upload.
+- Limits: 6 evidence files, 25 MB per file, 60 MB per job. The 25 MB and file-type limits are also set on the Supabase bucket, and the server checks real stored sizes before accepting a completion.
+- A before/after photo reminder appears when the technician starts a job, and in the checklist.
+- The technician's WhatsApp button opens with a greeting that names the technician and order.
+
+Reason:
+
+- Google Maps and Waze search Malaysian addresses better than free geocoders, and need no API key. A Leaflet pin can be added later if exact coordinates are needed.
+- Receipts and transfer slips are often already in the gallery or a PDF.
+- Shrinking photos makes uploads faster on mobile data and keeps the 1 GB free storage from filling up.
+- Before photos can't be taken after the work starts, so the reminder comes at the start.

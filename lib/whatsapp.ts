@@ -1,5 +1,6 @@
 import { normalizeMyPhone } from "./phone";
 import { formatTime, formatDate, money } from "./format";
+import { googleMapsLink } from "./maps";
 
 /** wa.me deep link. Without a phone, WhatsApp opens the contact picker with the message filled in. */
 export function waLink(phone: string | null | undefined, message: string) {
@@ -35,6 +36,12 @@ export function newJobMessage(input: {
     `Customer: ${input.customerName}\n` +
     `Address: ${input.address}\n` +
     `When: ${slot}\n` +
-    `Quoted: ${money(input.quotedPrice)}`
+    `Quoted: ${money(input.quotedPrice)}\n` +
+    `Map: ${googleMapsLink(input.address)}`
   );
+}
+
+/** Technician's first message to the customer; they type the rest themselves. */
+export function customerHelloMessage(input: { customerName: string; technicianName: string; orderNo: string }) {
+  return `Hi ${input.customerName}, I'm ${input.technicianName}, your technician from Sejuk Sejuk Service for job ${input.orderNo}. `;
 }
