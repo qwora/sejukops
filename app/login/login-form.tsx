@@ -27,9 +27,12 @@ export function LoginForm() {
   const [busy, setBusy] = useState<"" | "role" | "email">("");
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [loggedOut, setLoggedOut] = useState(false);
 
   useEffect(() => {
-    setConfirmed(new URLSearchParams(window.location.search).has("confirmed"));
+    const params = new URLSearchParams(window.location.search);
+    setConfirmed(params.has("confirmed"));
+    setLoggedOut(params.has("loggedout"));
   }, []);
 
   async function continueAs() {
@@ -81,6 +84,7 @@ export function LoginForm() {
         <p className="mt-2 text-[15px] font-light text-ink-muted">Choose your role to continue. No password needed for the assessment demo.</p>
       </div>
 
+      {loggedOut && !confirmed && <p className="rounded-xl bg-ok-tint px-4 py-3 text-[13px] font-medium text-ok">You have logged out.</p>}
       {confirmed && <p className="rounded-xl bg-ok-tint px-4 py-3 text-[13px] font-medium text-ok">Email confirmed. You can sign in now.</p>}
       {error && <ErrorBanner message={error} />}
 

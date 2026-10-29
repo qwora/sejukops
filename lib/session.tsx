@@ -2,7 +2,8 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { getProfile, type AppRole } from "@/lib/supabase/auth";
+import { useRouter } from "next/navigation";
+import { getProfile, signOut, type AppRole } from "@/lib/supabase/auth";
 
 export const DEMO_ROLE_KEY = "sejuksejuk.demo.role";
 export const DEMO_TECH_KEY = "sejuksejuk.demo.technician";
@@ -100,4 +101,16 @@ export function useSession() {
   const value = useContext(SessionContext);
   if (!value) throw new Error("useSession must be used inside SessionProvider");
   return value;
+}
+
+/** Ends the session completely (account and demo role) and returns to the sign-in page. */
+export function useLogOut() {
+  const router = useRouter();
+  const session = useSession();
+  return async () => {
+    try { await signOut(); } catch { /* already signed out */ }
+    clearDemo();
+    await session.refresh();
+    router.replace("/login?loggedout");
+  };
 }
