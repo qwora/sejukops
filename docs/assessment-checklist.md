@@ -1,6 +1,6 @@
 # Assessment Checklist
 
-Every requirement in `Programmer Assessment.md`, checked against the live app (https://sejuksejuk.vercel.app), last on 28 Oct 2026.
+Every requirement in the assessment brief, checked against the live app (https://sejuksejuk.vercel.app), last on 28 Oct 2026.
 
 ✅ done · ➕ done beyond what was asked · ⚠️ partial (reason given)
 

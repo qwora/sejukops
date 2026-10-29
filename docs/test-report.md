@@ -1,6 +1,6 @@
 # Final Test Report
 
-Tested on the live site **https://sejuksejuk.vercel.app** against every requirement in `Programmer Assessment.md`:
+Tested on the live site **https://sejuksejuk.vercel.app** against every requirement in the assessment brief:
 
 - **Round 1 (27 Oct):** full end-to-end QA. Records named **"QA Final …"** (ORDER1272–ORDER1274).
 - **Round 2 (28 Oct):** field testing on a real iPhone, then a final audit. Records named **"Test Live Field"** (ORDER1282) and QA runs ORDER1283–ORDER1284.
