@@ -4,6 +4,8 @@ Built over three days (27–29 Oct 2026), in stages. Each stage was planned, bui
 
 The git history follows the same stages. Every commit is one reviewable step, and every pull request is one stage.
 
+This public repository carries the full commit history. The pull requests (with Vercel preview checks) are in the private working repository; access is available on request.
+
 ## Timeline
 
 | # | Stage | When | Pull request | What changed |
