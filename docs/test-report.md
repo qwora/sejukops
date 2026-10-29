@@ -103,5 +103,5 @@ Refused with a fixed message: "What is the weather in KL?", "Delete all orders".
 ## Not covered / known limits
 
 - **Install as an app (PWA):** confirmed on a real iPhone in round 2.
-- **Real reviewer accounts:** not set up yet, so "Continue as…" uses demo mode. Signup with a new email was not tested, to avoid creating accounts.
+- **Real reviewer accounts:** added after this round (admin, manager and Ali, listed in the README). Email sign-in was tested by hand for all three roles. Signup with a new email was not tested, to avoid creating accounts.
 - **Reschedule KPI** counts reschedules on jobs scheduled within the period, not by the date the reschedule happened.
