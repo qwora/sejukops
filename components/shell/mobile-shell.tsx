@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { ClipboardList, History, LogOut } from "lucide-react";
+import { ArrowLeftRight, ClipboardList, History, LogOut } from "lucide-react";
 import { RoleGuard } from "./role-guard";
 import { BrandLockup } from "./brand";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { JOB_STATE } from "@/components/technician/job-bits";
-import { useSession, clearDemo } from "@/lib/session";
-import { signOut } from "@/lib/supabase/auth";
+import { useLogOut, useSession } from "@/lib/session";
 import { listOrders } from "@/lib/data";
 import { useLoad } from "@/lib/use-load";
 import { formatTime, isToday } from "@/lib/format";
@@ -36,20 +35,11 @@ export function MobileShell({ children, tabs = true }: { children: ReactNode; ta
   );
 }
 
-function useLeave() {
-  const router = useRouter();
-  return async () => {
-    try { await signOut(); } catch { /* ignore */ }
-    clearDemo();
-    router.push("/login");
-  };
-}
-
 /** Desktop-only side panel: the technician's open and today's jobs, always one click away. */
 function JobsRail() {
   const session = useSession();
   const pathname = usePathname();
-  const leave = useLeave();
+  const logOut = useLogOut();
   const me = session.technicianName;
   const { data } = useLoad(() => listOrders(), [me, pathname]);
   const jobs = (data ?? [])
@@ -94,9 +84,11 @@ function JobsRail() {
       </ul>
       <div className="border-t border-line-strong p-3">
         <InstallPrompt compact />
-        <button onClick={leave} className="flex h-10 w-full items-center gap-2.5 rounded-full px-3.5 text-[13px] font-medium text-ink-2 hover:bg-white/70">
-          <LogOut className="h-[18px] w-[18px]" />
-          {session.mode === "demo" ? "Switch role" : "Sign out"}
+        <Link href="/login" className="flex h-10 w-full items-center gap-2.5 rounded-full px-3.5 text-[13px] font-medium text-ink-2 hover:bg-white/70">
+          <ArrowLeftRight className="h-[18px] w-[18px]" />Switch role
+        </Link>
+        <button onClick={logOut} className="flex h-10 w-full items-center gap-2.5 rounded-full px-3.5 text-[13px] font-medium text-ink-2 hover:bg-white/70">
+          <LogOut className="h-[18px] w-[18px]" />Log out
         </button>
       </div>
     </aside>
@@ -106,8 +98,7 @@ function JobsRail() {
 /** Phone-only bottom tab bar. */
 function TabBar() {
   const pathname = usePathname();
-  const session = useSession();
-  const leave = useLeave();
+  const logOut = useLogOut();
   const historyActive = pathname.startsWith("/technician/history");
   const jobsActive = pathname.startsWith("/technician/jobs");
   const tab = "flex min-h-[52px] flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium";
@@ -120,9 +111,11 @@ function TabBar() {
       <Link href="/technician/history" aria-current={historyActive ? "page" : undefined} className={cx(tab, historyActive ? "text-brand" : "text-ink-faint")}>
         <History className="h-[22px] w-[22px]" aria-hidden />History
       </Link>
-      <button onClick={leave} className={cx(tab, "text-ink-faint")}>
-        <LogOut className="h-[22px] w-[22px]" aria-hidden />
-        {session.mode === "demo" ? "Switch" : "Sign out"}
+      <Link href="/login" className={cx(tab, "text-ink-faint")}>
+        <ArrowLeftRight className="h-[22px] w-[22px]" aria-hidden />Switch role
+      </Link>
+      <button onClick={logOut} className={cx(tab, "text-ink-faint")}>
+        <LogOut className="h-[22px] w-[22px]" aria-hidden />Log out
       </button>
     </nav>
   );

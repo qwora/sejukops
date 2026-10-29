@@ -6,7 +6,8 @@ Takes about 30 minutes. Use a laptop for Admin and Manager, and a phone for Tech
 **Tips before you start**
 
 - Name every test customer starting with **"Test"** (e.g. "Test Ahmad") so test orders are easy to find later.
-- To switch role: go to **/login**, pick another role card, press **Continue**.
+- To switch role: press **Switch role** (sidebar on desktop, tab bar on phone), pick another role card, press **Continue**.
+- To end the session: press **Log out**. It clears the account and demo role and shows "You have logged out." on the sign-in page.
 - Demo sign-in remembers the role per browser tab. Using two tabs (or laptop + phone) lets you be Admin and Technician at the same time.
 - ✅ = what you should see. If you see something else, note the step number.
 

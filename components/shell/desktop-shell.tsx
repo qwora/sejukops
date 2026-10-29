@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { BarChart3, ClipboardCheck, Home, LogOut, Menu, PlusCircle, ReceiptText, Search, Sparkles, X } from "lucide-react";
-import { useSession, clearDemo } from "@/lib/session";
-import { signOut, type AppRole } from "@/lib/supabase/auth";
+import { ArrowLeftRight, BarChart3, ClipboardCheck, Home, LogOut, Menu, PlusCircle, ReceiptText, Search, Sparkles, X } from "lucide-react";
+import { useLogOut, useSession } from "@/lib/session";
+import type { AppRole } from "@/lib/supabase/auth";
 import { listOrders } from "@/lib/data";
 import { BrandMark } from "./brand";
 import { RoleGuard } from "./role-guard";
@@ -54,11 +54,7 @@ function ShellFrame({ children, assistant }: { children: ReactNode; assistant: b
   const items = NAV.filter((item) => item.roles.includes(role));
   const home = role === "manager" ? "/manager/reviews" : "/admin/orders";
 
-  async function leave() {
-    try { await signOut(); } catch { /* ignore */ }
-    clearDemo();
-    router.push("/login");
-  }
+  const logOut = useLogOut();
 
   function search(event: React.FormEvent) {
     event.preventDefault();
@@ -102,8 +98,11 @@ function ShellFrame({ children, assistant }: { children: ReactNode; assistant: b
       ))}
       <div className="mt-auto space-y-0.5 pt-4">
         {session.mode === "demo" && <p className="px-2.5 pb-1 text-[11px] leading-snug text-ink-faint">Demo mode · actions are saved to the live database</p>}
-        <button onClick={leave} className="flex h-9 w-full items-center gap-2.5 rounded-full px-3 text-[13px] font-medium text-ink-2 hover:bg-white/70">
-          <LogOut className="h-[18px] w-[18px]" aria-hidden />Switch role
+        <Link href="/login" className="flex h-9 w-full items-center gap-2.5 rounded-full px-3 text-[13px] font-medium text-ink-2 hover:bg-white/70">
+          <ArrowLeftRight className="h-[18px] w-[18px]" aria-hidden />Switch role
+        </Link>
+        <button onClick={logOut} className="flex h-9 w-full items-center gap-2.5 rounded-full px-3 text-[13px] font-medium text-ink-2 hover:bg-white/70">
+          <LogOut className="h-[18px] w-[18px]" aria-hidden />Log out
         </button>
       </div>
     </nav>
