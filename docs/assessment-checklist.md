@@ -125,7 +125,7 @@ Every requirement in `Programmer Assessment.md`, checked against the live app (h
 | Item | Status |
 | --- | --- |
 | Live demo | ✅ https://sejuksejuk.vercel.app |
-| GitHub repo | ⚠️ Private: invite the assessor as a collaborator before submitting. Build history: `docs/development-history.md` |
+| GitHub repo | ✅ Public. Build history: `docs/development-history.md` |
 | README: what was built | ✅ |
 | Tech stack | ✅ |
 | Architecture decisions | ✅ README + `docs/decisions.md` |

@@ -1,6 +1,6 @@
 # How Sejuk Ops was built
 
-Built over two days (27–28 Oct 2026), in stages. Each stage was planned, built on its own branch, merged through a pull request, deployed to Vercel and tested on the live site before the next one started.
+Built over three days (27–29 Oct 2026), in stages. Each stage was planned, built on its own branch, merged through a pull request, deployed to Vercel and tested on the live site before the next one started.
 
 The git history follows the same stages. Every commit is one reviewable step, and every pull request is one stage.
 
@@ -16,6 +16,7 @@ The git history follows the same stages. Every commit is one reviewable step, an
 | 5 | End-to-end QA | 27 Oct, late night | #8 | Full test on the live site. Fixed: times saved an hour off outside Malaysia, over-cautious AI supervisor, sign-in console error, negative price message, receipt on the job done screen. Test report. |
 | 6 | Field testing on a real iPhone | 28 Oct | #9, #10 | Fixed the header under the iPhone status bar, gallery/file uploads, photo shrinking and upload limits, before/after photo reminder, pre-filled customer WhatsApp, Waze/Google Maps buttons, technician phone numbers. |
 | 7 | Final audit and docs | 28 Oct | #11 | Guarded AI answers against made-up order numbers, Malay questions without AI, favicon. Documentation tidied for submission. |
+| 8 | Reviewer polish | 29 Oct | #12, #13 | Review queue shows newest first with an oldest-first switch and a flagged-only filter. Separate Log out and Switch role buttons. Email sign-in accounts for each role. |
 
 ## How each stage was run
 

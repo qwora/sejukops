@@ -4,7 +4,17 @@ Internal operations system for **Sejuk Sejuk Service Sdn Bhd** (aircond installa
 
 **Live demo:** https://sejuksejuk.vercel.app · open it, pick a role, press **Continue**. No password needed.
 
-**How it was built:** in stages over two days, each merged through a pull request and tested on the live site. See [docs/development-history.md](docs/development-history.md).
+**Email sign-in (real Supabase Auth):** on the sign-in page press **Sign in with email** and use one of these test accounts. Each one opens its own workspace, and the server checks the role on every action.
+
+| Role | Email | Password | Opens |
+| --- | --- | --- | --- |
+| Admin | `admin@demo.sejuksejuk.app` | `abcd1234` | Orders |
+| Manager | `manager@demo.sejuksejuk.app` | `abcd1234` | Review queue |
+| Technician (Ali) | `ali@demo.sejuksejuk.app` | `abcd1234` | Ali's jobs |
+
+These are shared demo accounts with no real data behind them. **Switch role** goes back to the role picker; **Log out** ends the session.
+
+**How it was built:** in stages over three days, each merged through a pull request and tested on the live site. See [docs/development-history.md](docs/development-history.md).
 
 **Tested:** 54 automated workflow and permission checks, 38 screens at phone and desktop size, and the full job flow on a real iPhone. See [docs/test-report.md](docs/test-report.md).
 
